@@ -100,21 +100,21 @@ pub enum Rank {
 #[repr(u64)]
 #[derive(Clone, Copy, Debug)]
 pub enum Diagonal {
-    A1toA1 = 0x00000000_00000001,
-    A2toB1 = 0x00000000_00000102,
-    A3toC1 = 0x00000000_00010204,
-    A4toD1 = 0x00000000_01020408,
-    A5toE1 = 0x00000001_02040810,
-    A6toF1 = 0x00000102_04081020,
-    A7toG1 = 0x00010204_08102040,
-    A8toH1 = 0x01020408_10204080,
-    H2toB8 = 0x02040810_20408000,
-    H3toC8 = 0x04081020_40800000,
-    H4toD8 = 0x08102040_80000000,
-    H5toE8 = 0x10204080_00000000,
-    H6toF8 = 0x20408000_00000000,
-    H7toG8 = 0x40800000_00000000,
-    H8toH8 = 0x80000000_00000000,
+    MinusSeven = 0x00000000_00000001, // a1 - a1
+    MinusSix = 0x00000000_00000102,   // b1 - a2
+    MinusFive = 0x00000000_00010204,  // c1 - a3
+    MinusFour = 0x00000000_01020408,  // d1 - a4
+    MinusThree = 0x00000001_02040810, // e1 - a5
+    MinusTwo = 0x00000102_04081020,   // f1 - a6
+    MinusOne = 0x00010204_08102040,   // g1 - a7
+    Main = 0x01020408_10204080,       // h1 - a8
+    PlusOne = 0x02040810_20408000,    // h2 - b8
+    PlusTwo = 0x04081020_40800000,    // h3 - c8
+    PlusThree = 0x08102040_80000000,  // h4 - d8
+    PlusFour = 0x10204080_00000000,   // h5 - e8
+    PlusFive = 0x20408000_00000000,   // h6 - f8
+    PlusSix = 0x40800000_00000000,    // h7 - g8
+    PlusSeven = 0x80000000_00000000,  // h8 - h8
 }
 
 /// Antidiagonals are SW-to-NE lines, similar to matrix terminology.
@@ -122,21 +122,21 @@ pub enum Diagonal {
 #[repr(u64)]
 #[derive(Clone, Copy, Debug)]
 pub enum AntiDiagonal {
-    A8toA8 = 0x01000000_00000000,
-    A7toB8 = 0x02010000_00000000,
-    A6toC8 = 0x04020100_00000000,
-    A5toD8 = 0x08040201_00000000,
-    A4toE8 = 0x10080402_01000000,
-    A3toF8 = 0x20100804_02010000,
-    A2toG8 = 0x40201008_04020100,
-    A1toH8 = 0x80402010_08040201,
-    H7toB1 = 0x00804020_10080402,
-    H6toC1 = 0x00008040_20100804,
-    H5toD1 = 0x00000080_40201008,
-    H4toE1 = 0x00000000_80402010,
-    H3toF1 = 0x00000000_00804020,
-    H2toG1 = 0x00000000_00008040,
-    H1toH1 = 0x00000000_00000080,
+    MinusSeven = 0x00000000_00000080, // h1 - h1
+    MinusSix = 0x00000000_00008040,   // g1 - h2
+    MinusFive = 0x00000000_00804020,  // f1 - h3
+    MinusFour = 0x00000000_80402010,  // e1 - h4
+    MinusThree = 0x00000080_40201008, // d1 - h5
+    MinusTwo = 0x00008040_20100804,   // c1 - h6
+    MinusOne = 0x00804020_10080402,   // b1 - h7
+    Main = 0x80402010_08040201,       // a1 - h8
+    PlusOne = 0x40201008_04020100,    // a2 - g8
+    PlusTwo = 0x20100804_02010000,    // a3 - f8
+    PlusThree = 0x10080402_01000000,  // a4 - e8
+    PlusFour = 0x08040201_00000000,   // a5 - d8
+    PlusFive = 0x04020100_00000000,   // a6 - c8
+    PlusSix = 0x02010000_00000000,    // a7 - b8
+    PlusSeven = 0x01000000_00000000,  // a8 - a8
 }
 
 /// An unsigned 64 bit integer representation of a chessboard, where every bit represents one square.
@@ -173,12 +173,6 @@ impl Display for BitBoard {
         let ranks = (0..64)
             .step_by(8)
             .rev()
-            .inspect(|shift| {
-                dbg!(shift);
-            })
-            .inspect(|rank| {
-                dbg!(format!("{:064b}", mask.shl(rank)));
-            })
             .map(|rank| self.iter_bits_masked(mask.shl(rank)))
             .map(|rank| {
                 rank.map(|square| match square {
@@ -283,63 +277,63 @@ mod tests {
     fn test_diagonal() {
         for (diagonal, string) in [
             (
-                Diagonal::A1toA1,
+                Diagonal::MinusSeven,
                 "........\n........\n........\n........\n........\n........\n........\nx.......\n",
             ),
             (
-                Diagonal::A2toB1,
+                Diagonal::MinusSix,
                 "........\n........\n........\n........\n........\n........\nx.......\n.x......\n",
             ),
             (
-                Diagonal::A3toC1,
+                Diagonal::MinusFive,
                 "........\n........\n........\n........\n........\nx.......\n.x......\n..x.....\n",
             ),
             (
-                Diagonal::A4toD1,
+                Diagonal::MinusFour,
                 "........\n........\n........\n........\nx.......\n.x......\n..x.....\n...x....\n",
             ),
             (
-                Diagonal::A5toE1,
+                Diagonal::MinusThree,
                 "........\n........\n........\nx.......\n.x......\n..x.....\n...x....\n....x...\n",
             ),
             (
-                Diagonal::A6toF1,
+                Diagonal::MinusTwo,
                 "........\n........\nx.......\n.x......\n..x.....\n...x....\n....x...\n.....x..\n",
             ),
             (
-                Diagonal::A7toG1,
+                Diagonal::MinusOne,
                 "........\nx.......\n.x......\n..x.....\n...x....\n....x...\n.....x..\n......x.\n",
             ),
             (
-                Diagonal::A8toH1,
+                Diagonal::Main,
                 "x.......\n.x......\n..x.....\n...x....\n....x...\n.....x..\n......x.\n.......x\n",
             ),
             (
-                Diagonal::H2toB8,
+                Diagonal::PlusOne,
                 ".x......\n..x.....\n...x....\n....x...\n.....x..\n......x.\n.......x\n........\n",
             ),
             (
-                Diagonal::H3toC8,
+                Diagonal::PlusTwo,
                 "..x.....\n...x....\n....x...\n.....x..\n......x.\n.......x\n........\n........\n",
             ),
             (
-                Diagonal::H4toD8,
+                Diagonal::PlusThree,
                 "...x....\n....x...\n.....x..\n......x.\n.......x\n........\n........\n........\n",
             ),
             (
-                Diagonal::H5toE8,
+                Diagonal::PlusFour,
                 "....x...\n.....x..\n......x.\n.......x\n........\n........\n........\n........\n",
             ),
             (
-                Diagonal::H6toF8,
+                Diagonal::PlusFive,
                 ".....x..\n......x.\n.......x\n........\n........\n........\n........\n........\n",
             ),
             (
-                Diagonal::H7toG8,
+                Diagonal::PlusSix,
                 "......x.\n.......x\n........\n........\n........\n........\n........\n........\n",
             ),
             (
-                Diagonal::H8toH8,
+                Diagonal::PlusSeven,
                 ".......x\n........\n........\n........\n........\n........\n........\n........\n",
             ),
         ] {
@@ -355,64 +349,64 @@ mod tests {
     fn test_antidiagonal() {
         for (antidiagonal, string) in [
             (
-                AntiDiagonal::A1toH8,
-                ".......x\n......x.\n.....x..\n....x...\n...x....\n..x.....\n.x......\nx.......\n",
+                AntiDiagonal::MinusSeven,
+                "........\n........\n........\n........\n........\n........\n........\n.......x\n",
             ),
             (
-                AntiDiagonal::A2toG8,
-                "......x.\n.....x..\n....x...\n...x....\n..x.....\n.x......\nx.......\n........\n",
-            ),
-            (
-                AntiDiagonal::A3toF8,
-                ".....x..\n....x...\n...x....\n..x.....\n.x......\nx.......\n........\n........\n",
-            ),
-            (
-                AntiDiagonal::A4toE8,
-                "....x...\n...x....\n..x.....\n.x......\nx.......\n........\n........\n........\n",
-            ),
-            (
-                AntiDiagonal::A5toD8,
-                "...x....\n..x.....\n.x......\nx.......\n........\n........\n........\n........\n",
-            ),
-            (
-                AntiDiagonal::A6toC8,
-                "..x.....\n.x......\nx.......\n........\n........\n........\n........\n........\n",
-            ),
-            (
-                AntiDiagonal::A7toB8,
-                ".x......\nx.......\n........\n........\n........\n........\n........\n........\n",
-            ),
-            (
-                AntiDiagonal::A8toA8,
-                "x.......\n........\n........\n........\n........\n........\n........\n........\n",
-            ),
-            (
-                AntiDiagonal::H7toB1,
-                "........\n.......x\n......x.\n.....x..\n....x...\n...x....\n..x.....\n.x......\n",
-            ),
-            (
-                AntiDiagonal::H6toC1,
-                "........\n........\n.......x\n......x.\n.....x..\n....x...\n...x....\n..x.....\n",
-            ),
-            (
-                AntiDiagonal::H5toD1,
-                "........\n........\n........\n.......x\n......x.\n.....x..\n....x...\n...x....\n",
-            ),
-            (
-                AntiDiagonal::H4toE1,
-                "........\n........\n........\n........\n.......x\n......x.\n.....x..\n....x...\n",
-            ),
-            (
-                AntiDiagonal::H3toF1,
-                "........\n........\n........\n........\n........\n.......x\n......x.\n.....x..\n",
-            ),
-            (
-                AntiDiagonal::H2toG1,
+                AntiDiagonal::MinusSix,
                 "........\n........\n........\n........\n........\n........\n.......x\n......x.\n",
             ),
             (
-                AntiDiagonal::H1toH1,
-                "........\n........\n........\n........\n........\n........\n........\n.......x\n",
+                AntiDiagonal::MinusFive,
+                "........\n........\n........\n........\n........\n.......x\n......x.\n.....x..\n",
+            ),
+            (
+                AntiDiagonal::MinusFour,
+                "........\n........\n........\n........\n.......x\n......x.\n.....x..\n....x...\n",
+            ),
+            (
+                AntiDiagonal::MinusThree,
+                "........\n........\n........\n.......x\n......x.\n.....x..\n....x...\n...x....\n",
+            ),
+            (
+                AntiDiagonal::MinusTwo,
+                "........\n........\n.......x\n......x.\n.....x..\n....x...\n...x....\n..x.....\n",
+            ),
+            (
+                AntiDiagonal::MinusOne,
+                "........\n.......x\n......x.\n.....x..\n....x...\n...x....\n..x.....\n.x......\n",
+            ),
+            (
+                AntiDiagonal::Main,
+                ".......x\n......x.\n.....x..\n....x...\n...x....\n..x.....\n.x......\nx.......\n",
+            ),
+            (
+                AntiDiagonal::PlusOne,
+                "......x.\n.....x..\n....x...\n...x....\n..x.....\n.x......\nx.......\n........\n",
+            ),
+            (
+                AntiDiagonal::PlusTwo,
+                ".....x..\n....x...\n...x....\n..x.....\n.x......\nx.......\n........\n........\n",
+            ),
+            (
+                AntiDiagonal::PlusThree,
+                "....x...\n...x....\n..x.....\n.x......\nx.......\n........\n........\n........\n",
+            ),
+            (
+                AntiDiagonal::PlusFour,
+                "...x....\n..x.....\n.x......\nx.......\n........\n........\n........\n........\n",
+            ),
+            (
+                AntiDiagonal::PlusFive,
+                "..x.....\n.x......\nx.......\n........\n........\n........\n........\n........\n",
+            ),
+            (
+                AntiDiagonal::PlusSix,
+                ".x......\nx.......\n........\n........\n........\n........\n........\n........\n",
+            ),
+            (
+                AntiDiagonal::PlusSeven,
+                "x.......\n........\n........\n........\n........\n........\n........\n........\n",
             ),
         ] {
             assert_eq!(
