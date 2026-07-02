@@ -38,7 +38,7 @@
 //! A8-H1 diagonal     | `0x01020408_10204080` | The first square in row 8 (`01`), the second square in row 7 (`02`) etc.
 //! H5-D1 antidiagonal | `0x00000080_40201008` | The 8th square in row 5 (`80`), the 7th square in row 4 (`40`) etc.
 //!
-//! The bits of a bitboard can be efficiently iterated through a [`BitBoardIterator`](crate::bitboard_iterator::BitBoardIterator).
+//! The bits of a bitboard can be efficiently iterated through a [`BitBoardIterator`].
 //!
 //! ```rust
 //! # use checkers::bitboard::{File, BitBoard};
