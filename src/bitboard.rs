@@ -36,7 +36,7 @@
 //! A file             | `0x01010101_01010101` | The first square in each row
 //! 3rd rank           | `0x00000000_00FF0000` | 8 consecutive bits between 16-24
 //! A8-H1 diagonal     | `0x01020408_10204080` | The first square in row 8 (`01`), the second square in row 7 (`02`) etc.
-//! H5-D1 antidiagonal | `0x00000080_40201008` |
+//! H5-D1 antidiagonal | `0x00000080_40201008` | The 8th square in row 5 (`80`), the 7th square in row 4 (`40`) etc.
 //!
 //! The bits of a bitboard can be efficiently iterated through a [`BitBoardIterator`](crate::bitboard_iterator::BitBoardIterator).
 //!
@@ -96,7 +96,7 @@ pub enum Rank {
 }
 
 /// Diagonals are NW-to-SE lines, similar to matrix terminology.
-/// These can be represented by increasing distances between ones.
+/// These can be represented by increasing and decreasing distances from the left edge.
 #[repr(u64)]
 #[derive(Clone, Copy, Debug)]
 pub enum Diagonal {
@@ -118,7 +118,7 @@ pub enum Diagonal {
 }
 
 /// Antidiagonals are SW-to-NE lines, similar to matrix terminology.
-/// These can be represented by decreasing distances between ones.
+/// These can be represented by increasing and decreasing distances from the left edge.
 #[repr(u64)]
 #[derive(Clone, Copy, Debug)]
 pub enum AntiDiagonal {
