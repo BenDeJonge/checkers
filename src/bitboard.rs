@@ -1,17 +1,19 @@
 //! A bitboard is a `u64` representation of a chessboard, where every bit represents one square on the board.
+//! All descriptions of orientation are written from the white perspective, which is best practice in chess analysis.
 //! By convention, the first (least-significant) bit signifies the bottom-left (a1) square.
 //! Subsequent squares are counted rowwise in reading order, like in the diagram below.
+//! The diagram renders correctly in light mode but will show up inverted otherwise.
 //!
 //! ```text
-//! 8 ⬜⬛⬜⬛⬜⬛⬜⬛    8 56 57 58 59 60 61 62 63
-//! 7 ⬛⬜⬛⬜⬛⬜⬛⬜    7 48 49 50 51 52 53 54 55
-//! 6 ⬜⬛⬜⬛⬜⬛⬜⬛    6 40 41 42 43 44 45 46 47
-//! 5 ⬛⬜⬛⬜⬛⬜⬛⬜    5 32 33 34 35 36 37 38 39
-//! 4 ⬜⬛⬜⬛⬜⬛⬜⬛    4 24 25 26 27 28 29 30 31
-//! 3 ⬛⬜⬛⬜⬛⬜⬛⬜    3 16 17 18 19 20 21 22 23
-//! 2 ⬜⬛⬜⬛⬜⬛⬜⬛    2 08 09 10 11 12 13 14 15
-//! 1 ⬛⬜⬛⬜⬛⬜⬛⬜    1 00 01 02 03 04 05 06 07
-//!    a b c d e f g h       a  b  c  d  e  f  g  h
+//! 8 ▓▓░░▓▓░░▓▓░░▓▓░░    8 56 57 58 59 60 61 62 63
+//! 7 ░░▓▓░░▓▓░░▓▓░░▓▓    7 48 49 50 51 52 53 54 55  
+//! 6 ▓▓░░▓▓░░▓▓░░▓▓░░    6 40 41 42 43 44 45 46 47
+//! 5 ░░▓▓░░▓▓░░▓▓░░▓▓    5 32 33 34 35 36 37 38 39  
+//! 4 ▓▓░░▓▓░░▓▓░░▓▓░░    4 24 25 26 27 28 29 30 31
+//! 3 ░░▓▓░░▓▓░░▓▓░░▓▓    3 16 17 18 19 20 21 22 23  
+//! 2 ▓▓░░▓▓░░▓▓░░▓▓░░    2 08 09 10 11 12 13 14 15
+//! 1 ░░▓▓░░▓▓░░▓▓░░▓▓    1 00 01 02 03 04 05 06 07  
+//!    a b c d e f g h    
 //! ```
 //!
 //! The magic numbers for the enums in this module are written in hexadecimal.
