@@ -60,17 +60,27 @@
 //! assert_eq!(actual, expected);
 //! ```
 
+use crate::bitboard_iterator::{BitBoardIterator, MaskedBitBoardIterator};
 use std::{
     fmt::Display,
     ops::{Deref, Shl},
 };
+use strum::EnumIter;
 
-use crate::bitboard_iterator::{BitBoardIterator, MaskedBitBoardIterator};
+/// Find the iterator element that intersects with some square.
+/// From this, the rank, file, diagonal and antidiagonal of a square are found.
+/// This helps generating the bitboards for each piece and starting square.
+trait ContainingSquare<I: Copy + Into<u64>>: Iterator<Item = I> + Sized {
+    fn find_containing_square(&mut self, square: u64) -> Option<u64> {
+        dbg!(square);
+        self.find(|&el| el.into() & square != 0).map(|el| el.into())
+    }
+}
 
 /// Files are vertical columns on the chessboard.
 /// These can be represented as ones in every eight bit.
 #[repr(u64)]
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, EnumIter)]
 pub enum File {
     A = 0x01010101_01010101,
     B = 0x02020202_02020202,
@@ -82,10 +92,18 @@ pub enum File {
     H = 0x80808080_80808080,
 }
 
+impl From<File> for u64 {
+    fn from(val: File) -> Self {
+        val as u64
+    }
+}
+
+impl ContainingSquare<File> for FileIter {}
+
 /// Ranks are horizontal rows on the chessboard.
 /// These can be represented as consecutive groups of eight ones.
 #[repr(u64)]
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, EnumIter)]
 pub enum Rank {
     One = 0x000000_00000000FF,
     Two = 0x000000_000000FF00,
@@ -97,49 +115,103 @@ pub enum Rank {
     Eight = 0xFF0000_0000000000,
 }
 
+impl From<Rank> for u64 {
+    fn from(value: Rank) -> Self {
+        value as u64
+    }
+}
+
+impl ContainingSquare<Rank> for RankIter {}
+
 /// Diagonals are NW-to-SE lines, similar to matrix terminology.
 /// These can be represented by increasing and decreasing distances from the left edge.
 #[repr(u64)]
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, EnumIter)]
 pub enum Diagonal {
-    MinusSeven = 0x00000000_00000001, // a1 - a1
-    MinusSix = 0x00000000_00000102,   // b1 - a2
-    MinusFive = 0x00000000_00010204,  // c1 - a3
-    MinusFour = 0x00000000_01020408,  // d1 - a4
-    MinusThree = 0x00000001_02040810, // e1 - a5
-    MinusTwo = 0x00000102_04081020,   // f1 - a6
-    MinusOne = 0x00010204_08102040,   // g1 - a7
-    Main = 0x01020408_10204080,       // h1 - a8
-    PlusOne = 0x02040810_20408000,    // h2 - b8
-    PlusTwo = 0x04081020_40800000,    // h3 - c8
-    PlusThree = 0x08102040_80000000,  // h4 - d8
-    PlusFour = 0x10204080_00000000,   // h5 - e8
-    PlusFive = 0x20408000_00000000,   // h6 - f8
-    PlusSix = 0x40800000_00000000,    // h7 - g8
-    PlusSeven = 0x80000000_00000000,  // h8 - h8
+    /// a1 - a1
+    MinusSeven = 0x00000000_00000001,
+    /// b1 - a2
+    MinusSix = 0x00000000_00000102,
+    /// c1 - a3
+    MinusFive = 0x00000000_00010204,
+    /// d1 - a4
+    MinusFour = 0x00000000_01020408,
+    /// e1 - a5
+    MinusThree = 0x00000001_02040810,
+    /// f1 - a6
+    MinusTwo = 0x00000102_04081020,
+    /// g1 - a7
+    MinusOne = 0x00010204_08102040,
+    /// h1 - a8
+    Main = 0x01020408_10204080,
+    /// h2 - b8
+    PlusOne = 0x02040810_20408000,
+    /// h3 - c8
+    PlusTwo = 0x04081020_40800000,
+    /// h4 - d8
+    PlusThree = 0x08102040_80000000,
+    /// h5 - e8
+    PlusFour = 0x10204080_00000000,
+    /// h6 - f8
+    PlusFive = 0x20408000_00000000,
+    /// h7 - g8
+    PlusSix = 0x40800000_00000000,
+    /// h8 - h8
+    PlusSeven = 0x80000000_00000000,
 }
+
+impl From<Diagonal> for u64 {
+    fn from(value: Diagonal) -> Self {
+        value as u64
+    }
+}
+
+impl ContainingSquare<Diagonal> for DiagonalIter {}
 
 /// Antidiagonals are SW-to-NE lines, similar to matrix terminology.
 /// These can be represented by increasing and decreasing distances from the left edge.
 #[repr(u64)]
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, EnumIter)]
 pub enum AntiDiagonal {
-    MinusSeven = 0x00000000_00000080, // h1 - h1
-    MinusSix = 0x00000000_00008040,   // g1 - h2
-    MinusFive = 0x00000000_00804020,  // f1 - h3
-    MinusFour = 0x00000000_80402010,  // e1 - h4
-    MinusThree = 0x00000080_40201008, // d1 - h5
-    MinusTwo = 0x00008040_20100804,   // c1 - h6
-    MinusOne = 0x00804020_10080402,   // b1 - h7
-    Main = 0x80402010_08040201,       // a1 - h8
-    PlusOne = 0x40201008_04020100,    // a2 - g8
-    PlusTwo = 0x20100804_02010000,    // a3 - f8
-    PlusThree = 0x10080402_01000000,  // a4 - e8
-    PlusFour = 0x08040201_00000000,   // a5 - d8
-    PlusFive = 0x04020100_00000000,   // a6 - c8
-    PlusSix = 0x02010000_00000000,    // a7 - b8
-    PlusSeven = 0x01000000_00000000,  // a8 - a8
+    /// h1 - h1
+    MinusSeven = 0x00000000_00000080,
+    /// g1 - h2
+    MinusSix = 0x00000000_00008040,
+    /// f1 - h3
+    MinusFive = 0x00000000_00804020,
+    /// e1 - h4
+    MinusFour = 0x00000000_80402010,
+    /// d1 - h5
+    MinusThree = 0x00000080_40201008,
+    /// c1 - h6
+    MinusTwo = 0x00008040_20100804,
+    /// b1 - h7
+    MinusOne = 0x00804020_10080402,
+    /// a1 - h8
+    Main = 0x80402010_08040201,
+    /// a2 - g8
+    PlusOne = 0x40201008_04020100,
+    /// a3 - f8
+    PlusTwo = 0x20100804_02010000,
+    /// a4 - e8
+    PlusThree = 0x10080402_01000000,
+    /// a5 - d8
+    PlusFour = 0x08040201_00000000,
+    /// a6 - c8
+    PlusFive = 0x04020100_00000000,
+    /// a7 - b8
+    PlusSix = 0x02010000_00000000,
+    /// a8 - a8
+    PlusSeven = 0x01000000_00000000,
 }
+
+impl From<AntiDiagonal> for u64 {
+    fn from(value: AntiDiagonal) -> Self {
+        value as u64
+    }
+}
+
+impl ContainingSquare<AntiDiagonal> for AntiDiagonalIter {}
 
 /// An unsigned 64 bit integer representation of a chessboard, where every bit represents one square.
 /// Fore more information, see the [module-level docs](crate::bitboard).
@@ -192,11 +264,12 @@ impl Display for BitBoard {
 
 #[cfg(test)]
 mod tests {
-
-    use crate::bitboard::{AntiDiagonal, BitBoard, Diagonal, File, Rank};
+    use crate::bitboard::{AntiDiagonal, BitBoard, ContainingSquare, Diagonal, File, Rank};
+    use std::{collections::VecDeque, ops::Shl};
+    use strum::IntoEnumIterator;
 
     #[test]
-    fn test_rank() {
+    fn test_rank_to_string() {
         for (rank, string) in [
             (
                 Rank::One,
@@ -236,7 +309,7 @@ mod tests {
     }
 
     #[test]
-    fn test_file() {
+    fn test_file_to_string() {
         for (file, string) in [
             (
                 File::A,
@@ -276,7 +349,7 @@ mod tests {
     }
 
     #[test]
-    fn test_diagonal() {
+    fn test_diagonal_to_string() {
         for (diagonal, string) in [
             (
                 Diagonal::MinusSeven,
@@ -348,7 +421,7 @@ mod tests {
     }
 
     #[test]
-    fn test_antidiagonal() {
+    fn test_antidiagonal_to_string() {
         for (antidiagonal, string) in [
             (
                 AntiDiagonal::MinusSeven,
@@ -416,6 +489,114 @@ mod tests {
                 string,
                 "{antidiagonal:?}",
             );
+        }
+    }
+
+    /// Test if each square of the board is found in the correct rank.
+    #[test]
+    fn test_rank_containing_square() {
+        for (row, expected) in (0..8).zip(Rank::iter()) {
+            for col in 0..8 {
+                let square = 1u64.shl(row * 8 + col);
+                assert_eq!(
+                    Rank::iter().find_containing_square(square),
+                    Some(expected.into())
+                );
+            }
+        }
+    }
+
+    /// Test if each square of the board is found in the correct file.
+    #[test]
+    fn test_file_containing_square() {
+        for (idx, expected) in (0..64).zip(File::iter().cycle()) {
+            let square = 1u64.shl(idx);
+            assert_eq!(
+                File::iter().find_containing_square(square),
+                Some(expected.into())
+            );
+        }
+    }
+
+    /// Test if each square of the board is found in the correct diagonal.
+    #[test]
+    fn test_diagonal_containing_square() {
+        let positive = [
+            Diagonal::PlusOne,
+            Diagonal::PlusTwo,
+            Diagonal::PlusThree,
+            Diagonal::PlusFour,
+            Diagonal::PlusFive,
+            Diagonal::PlusSix,
+            Diagonal::PlusSeven,
+        ];
+        let negative = [
+            Diagonal::MinusSeven,
+            Diagonal::MinusSix,
+            Diagonal::MinusFive,
+            Diagonal::MinusFour,
+            Diagonal::MinusThree,
+            Diagonal::MinusTwo,
+            Diagonal::MinusOne,
+        ];
+        // When going up in ranks from the 1st to the 8th, we need to remove
+        // 1 negative antidiagonal in front of the main and fill
+        // up the rest of the rank with positive antidiagonals in order.
+        let mut diagonals = VecDeque::from(negative);
+        diagonals.push_back(Diagonal::Main);
+        for row in 0..8 {
+            for (col, &expected) in (0..8).zip(diagonals.iter()) {
+                dbg!(row, col, expected);
+                let square = 1u64.shl(row * 8 + col);
+                assert_eq!(
+                    Diagonal::iter().find_containing_square(square),
+                    Some(expected.into())
+                );
+            }
+            // The or will only get triggered at the last iteration.
+            diagonals.push_back(*positive.get(row).unwrap_or(&Diagonal::Main));
+            diagonals.pop_front();
+        }
+    }
+
+    /// Test if each square of the board is found in the correct antidiagonal.
+    #[test]
+    fn test_antidiagonal_containing_square() {
+        let positive = [
+            AntiDiagonal::PlusOne,
+            AntiDiagonal::PlusTwo,
+            AntiDiagonal::PlusThree,
+            AntiDiagonal::PlusFour,
+            AntiDiagonal::PlusFive,
+            AntiDiagonal::PlusSix,
+            AntiDiagonal::PlusSeven,
+        ];
+        let negative = [
+            AntiDiagonal::MinusOne,
+            AntiDiagonal::MinusTwo,
+            AntiDiagonal::MinusThree,
+            AntiDiagonal::MinusFour,
+            AntiDiagonal::MinusFive,
+            AntiDiagonal::MinusSix,
+            AntiDiagonal::MinusSeven,
+        ];
+        // When going up in ranks from the 1st to the 8th, we need to add
+        // 1 additional positive antidiagonal in front of the main and fill
+        // up the rest of the rank with negative antidiagonals in order.
+        let mut antidiagonals = VecDeque::from(negative);
+        antidiagonals.push_front(AntiDiagonal::Main);
+        for row in 0..8 {
+            for (col, &expected) in (0..8).zip(antidiagonals.iter()) {
+                dbg!(row, col, expected);
+                let square = 1u64.shl(row * 8 + col);
+                assert_eq!(
+                    AntiDiagonal::iter().find_containing_square(square),
+                    Some(expected.into())
+                );
+            }
+            // The or will only get triggered at the last iteration.
+            antidiagonals.push_front(*positive.get(row).unwrap_or(&AntiDiagonal::Main));
+            antidiagonals.pop_back();
         }
     }
 }
