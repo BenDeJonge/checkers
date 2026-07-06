@@ -1,8 +1,9 @@
 #[derive(Copy, Clone)]
 pub struct Square {
-    idx: usize,
-    rank: usize,
-    file: usize,
+    pub(crate) idx: usize,
+    pub(crate) rank: usize,
+    pub(crate) file: usize,
+    pub(crate) board: u64,
 }
 
 impl Square {
@@ -11,6 +12,7 @@ impl Square {
             idx: i,
             rank: i % 8,
             file: i / 8,
+            board: 1u64 << i,
         }
     }
 }
@@ -28,11 +30,12 @@ impl TryFrom<usize> for Square {
     }
 }
 
-pub const SQUARES: [Square; 64] = {
+pub static SQUARES: [Square; 64] = {
     let mut squares = [Square {
         idx: 0,
         rank: 0,
         file: 0,
+        board: 1,
     }; 64];
     let mut i = 0;
     while i < 64 {
