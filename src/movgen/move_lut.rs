@@ -1,6 +1,6 @@
 use std::ops::Add;
 
-use strum::{EnumIter, IntoEnumIterator};
+use strum::IntoEnumIterator;
 
 use crate::{
     movgen::{
@@ -80,36 +80,34 @@ fn generate_queen_lut() -> BitBoardLUT {
         .iter_mut()
         .zip(generate_bishop_lut())
         .for_each(|(rook, bishop)| {
-            *rook &= bishop;
+            *rook |= bishop;
         });
     rook_lut
 }
 
-const KNIGHT_JUMPS: [u64; 4] = [6, 10, 15, 17];
-
-// TODO: review this. Why can not use into() instead of as u64?
 fn generate_knight_lut() -> BitBoardLUT {
+    const KNIGHT_JUMPS: [u64; 4] = [6, 10, 15, 17];
     let mut boards = [BitBoard::from(0); 64];
     for square in SQUARES.iter() {
-        let ranks: u64 = match square.rank {
-            0 => Rank::Two as u64 | Rank::Three as u64,
-            1 => Rank::One as u64 | Rank::Three as u64 | Rank::Four as u64,
-            6 => Rank::Four as u64 | Rank::Five as u64 | Rank::Seven as u64,
-            7 => Rank::Six as u64 | Rank::Seven as u64,
-            _ => u64::MAX,
-        };
-        let files: u64 = match square.file {
-            0 => File::B as u64 | File::C as u64,
-            1 => File::A as u64 | File::C as u64 | File::D as u64,
-            6 => File::E as u64 | File::F as u64 | File::H as u64,
-            7 => File::F as u64 | File::G as u64,
-            _ => u64::MAX,
-        };
+        let rank = Rank::try_from(square.rank).unwrap();
+        let mut ranks: u64 = 0;
+        for added in [Rank::One, Rank::Two] {
+            ranks |= u64::from(rank.saturating_add(&added));
+            ranks |= u64::from(rank.saturating_sub(&added));
+        }
+
+        let file = File::try_from(square.file).unwrap();
+        let mut files: u64 = 0;
+        for added in [File::A, File::B] {
+            files &= u64::from(file.saturating_add(&added));
+            files &= u64::from(file.saturating_sub(&added));
+        }
+
         let mut knight = 0;
         for jump in KNIGHT_JUMPS {
             knight |= square.board.add(jump) | square.board.saturating_sub(jump);
         }
-        knight &= ranks | files;
+        knight &= (ranks & files) ^ square.board;
         boards[square.idx] = BitBoard::from(knight);
     }
     boards
@@ -167,5 +165,110 @@ impl PieceLUT {
             Piece::Pawn(White) => self.pawn_white.get(square),
             Piece::Pawn(Black) => self.pawn_black.get(square),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::movgen::{
+        bitboard::BitBoard,
+        move_lut::{BitBoardLUT, generate_bishop_lut},
+    };
+
+    #[repr(usize)]
+    #[derive(Debug, Clone, Copy)]
+    enum TestSquare {
+        A1 = 0,
+        H1 = 7,
+        A8 = 56,
+        H8 = 63,
+        D4 = 27,
+        E4 = 28,
+    }
+
+    #[test]
+    fn test_bishop_lut() {
+        let lut = generate_bishop_lut();
+        helper(
+            lut,
+            TestSquare::A1,
+            vec![
+                9, 18, 27, 36, 45, 54, 63, // b2, c3, d4, e5, f6, g7, h8
+            ],
+        );
+        helper(
+            lut,
+            TestSquare::H1,
+            vec![
+                14, 21, 28, 35, 42, 49, 56, // g2, f3, e4, d5, c6, b7, a8
+            ],
+        );
+        helper(
+            lut,
+            TestSquare::A8,
+            vec![
+                7, 14, 21, 28, 35, 42, 49, // h1, g2, f3, e4, d5, c6, b7, a8
+            ],
+        );
+        helper(
+            lut,
+            TestSquare::H8,
+            vec![
+                0, 9, 18, 27, 36, 45, 54, // a1, b2, c3, d4, e5, f6, g7
+            ],
+        );
+        helper(
+            lut,
+            TestSquare::D4,
+            vec![
+                0, 9, 18, 36, 45, 54, 63, // a1, b2, c3, e5, f6, g7, h8
+                6, 13, 20, 34, 41, 48, // g1, f2, e3, c5, b6, a7
+            ],
+        );
+        helper(
+            lut,
+            TestSquare::E4,
+            vec![
+                7, 14, 21, 35, 42, 49, 56, // h1, g2, f3, d5, c6, b7, a8
+                1, 10, 19, 37, 46, 55, // b1, c2, d3, f5, g6, h7
+            ],
+        );
+    }
+
+    #[test]
+    fn test_rook_lut() {
+        todo!()
+    }
+
+    #[test]
+    fn test_queen_lut() {
+        todo!()
+    }
+
+    #[test]
+    fn test_knight_lut() {
+        todo!()
+    }
+
+    #[test]
+    fn test_king_lut() {
+        todo!()
+    }
+
+    #[test]
+    fn test_pawn_white_lut() {
+        todo!()
+    }
+
+    #[test]
+    fn test_pawn_black_lut() {
+        todo!()
+    }
+
+    fn helper(lut: BitBoardLUT, square: TestSquare, squares: Vec<u64>) {
+        let idx = square as usize;
+        let actual = lut[idx];
+        let expected = squares.into_iter().fold(0, |acc, e| acc | 1 << e);
+        assert_eq!(actual, BitBoard::new(expected), "{:?}", square);
     }
 }
