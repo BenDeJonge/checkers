@@ -13,7 +13,7 @@
 //! 3 ░░▓▓░░▓▓░░▓▓░░▓▓    3 16 17 18 19 20 21 22 23  
 //! 2 ▓▓░░▓▓░░▓▓░░▓▓░░    2 08 09 10 11 12 13 14 15
 //! 1 ░░▓▓░░▓▓░░▓▓░░▓▓    1 00 01 02 03 04 05 06 07  
-//!    a b c d e f g h    
+//!    a b c d e f g h       a  b  c  d  e  f  g  h
 //! ```
 //!
 //! The magic numbers for the enums in this module are written in hexadecimal.
@@ -60,17 +60,19 @@
 //! assert_eq!(actual, expected);
 //! ```
 
-use crate::bitboard_iterator::{BitBoardIterator, MaskedBitBoardIterator};
 use std::{
     fmt::Display,
-    ops::{Deref, Shl},
+    ops::{self, Deref, Shl},
 };
 use strum::EnumIter;
 
 /// Find the iterator element that intersects with some square.
 /// From this, the rank, file, diagonal and antidiagonal of a square are found.
 /// This helps generating the bitboards for each piece and starting square.
-trait ContainingSquare<I: Copy + Into<u64>>: Iterator<Item = I> + Sized {
+pub trait ContainingSquare<I>: Iterator<Item = I> + Sized
+where
+    I: Copy + Into<u64>,
+{
     fn find_containing_square(&mut self, square: u64) -> Option<u64> {
         dbg!(square);
         self.find(|&el| el.into() & square != 0).map(|el| el.into())
@@ -215,16 +217,32 @@ impl ContainingSquare<AntiDiagonal> for AntiDiagonalIter {}
 
 /// An unsigned 64 bit integer representation of a chessboard, where every bit represents one square.
 /// Fore more information, see the [module-level docs](crate::bitboard).
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct BitBoard(u64);
 
 impl BitBoard {
+    pub const fn new(board: u64) -> Self {
+        Self(board)
+    }
+
     pub fn iter_bits(&self) -> impl Iterator<Item = bool> {
         BitBoardIterator::new(**self)
     }
 
     pub fn iter_bits_masked(&self, mask: u64) -> impl Iterator<Item = bool> {
         MaskedBitBoardIterator::new(**self, mask)
+    }
+}
+
+impl ops::BitAndAssign for BitBoard {
+    fn bitand_assign(&mut self, rhs: Self) {
+        self.0 &= rhs.0;
+    }
+}
+
+impl ops::BitXorAssign for BitBoard {
+    fn bitxor_assign(&mut self, rhs: Self) {
+        self.0 ^= rhs.0;
     }
 }
 
@@ -262,10 +280,57 @@ impl Display for BitBoard {
     }
 }
 
+struct MaskedBitBoardIterator {
+    board: u64,
+    left: u64,
+    right: u64,
+}
+
+impl MaskedBitBoardIterator {
+    pub fn new(board: u64, mask: u64) -> Self {
+        Self {
+            board,
+            left: mask.trailing_zeros().into(),
+            right: mask.checked_ilog2().unwrap_or_default().into(),
+        }
+    }
+}
+
+impl Iterator for MaskedBitBoardIterator {
+    type Item = bool;
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.left <= self.right {
+            let result = self.board & 1u64.shl(self.left) != 0;
+            self.left += 1;
+            Some(result)
+        } else {
+            None
+        }
+    }
+}
+struct BitBoardIterator(MaskedBitBoardIterator);
+
+impl BitBoardIterator {
+    pub fn new(board: u64) -> Self {
+        Self(MaskedBitBoardIterator::new(board, u64::MAX))
+    }
+}
+
+impl Iterator for BitBoardIterator {
+    type Item = bool;
+    fn next(&mut self) -> Option<Self::Item> {
+        self.0.next()
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use crate::bitboard::{AntiDiagonal, BitBoard, ContainingSquare, Diagonal, File, Rank};
-    use std::{collections::VecDeque, ops::Shl};
+    use crate::movgen::bitboard::{
+        AntiDiagonal, BitBoard, BitBoardIterator, ContainingSquare, Diagonal, File,
+        MaskedBitBoardIterator, Rank,
+    };
+    use std::collections::VecDeque;
+    use std::{fmt::Debug, iter, ops::Shl};
     use strum::IntoEnumIterator;
 
     #[test]
@@ -490,6 +555,32 @@ mod tests {
                 "{antidiagonal:?}",
             );
         }
+    }
+
+    /// Place a single 1 in every position on the board.
+    #[test]
+    fn test_bitboard_iter() {
+        for i in 0..64 {
+            let actual = BitBoardIterator::new(1 << i);
+            let expected = iter::repeat_n(false, i)
+                .chain(iter::once(true))
+                .chain(iter::repeat_n(false, 64 - i - 1));
+            test_iter_helper(actual, expected);
+        }
+    }
+
+    /// Mask a group of 8 1s in a board that is all 1s.
+    #[test]
+    fn test_masked_bitboard_iter() {
+        for i in 0..(64 - 8) {
+            let actual = MaskedBitBoardIterator::new(u64::MAX, 255u64.shl(i));
+            let expected = iter::repeat_n(true, 8);
+            test_iter_helper(actual, expected);
+        }
+    }
+
+    fn test_iter_helper<T: Eq + Debug>(it1: impl Iterator<Item = T>, it2: impl Iterator<Item = T>) {
+        assert_eq!(it1.collect::<Vec<T>>(), it2.collect::<Vec<T>>())
     }
 
     /// Test if each square of the board is found in the correct rank.

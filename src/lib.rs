@@ -1,3 +1,2 @@
-pub mod bitboard;
-mod bitboard_iterator;
+mod movgen;
 mod square;
