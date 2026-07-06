@@ -172,7 +172,9 @@ impl PieceLUT {
 mod tests {
     use crate::movgen::{
         bitboard::BitBoard,
-        move_lut::{BitBoardLUT, generate_bishop_lut},
+        move_lut::{
+            generate_queen_lut, generate_rook_lut,
+        },
     };
 
     #[repr(usize)]
@@ -237,12 +239,116 @@ mod tests {
 
     #[test]
     fn test_rook_lut() {
-        todo!()
+        let lut = generate_rook_lut();
+        helper(
+            lut,
+            TestSquare::A1,
+            vec![
+                1, 2, 3, 4, 5, 6, 7, // b1, c1, d1, e1, f1, g1, h1
+                8, 16, 24, 32, 40, 48, 56, // a2, a3, a4, a5, a6, a7, a8
+            ],
+        );
+        helper(
+            lut,
+            TestSquare::H1,
+            vec![
+                0, 1, 2, 3, 4, 5, 6, // a1, b1, c1, d1, e1, f1, g1, h1
+                15, 23, 31, 39, 47, 55, 63, // h2, h3, h4, h5, h6, h7, h8
+            ],
+        );
+        helper(
+            lut,
+            TestSquare::A8,
+            vec![
+                0, 8, 16, 24, 32, 40, 48, // a1, a2, a3, a4, a5, a6, a7
+                57, 58, 59, 60, 61, 62, 63, // b8, c8, d8, e8, f8, g8, h8
+            ],
+        );
+        helper(
+            lut,
+            TestSquare::H8,
+            vec![
+                7, 15, 23, 31, 39, 47, 55, // h1, h2, h3, h4, h5, h6, h7
+                56, 57, 58, 59, 60, 61, 62, // a8, b8, c8, d8, e8, f8, g8
+            ],
+        );
+        helper(
+            lut,
+            TestSquare::D4,
+            vec![
+                3, 11, 19, 35, 43, 51, 59, // d1, d2, d3, d5, d6, d7, d8
+                24, 25, 26, 28, 29, 30, 31, // a4, b4, c4, e4, f4, g4, h4
+            ],
+        );
+        helper(
+            lut,
+            TestSquare::E4,
+            vec![
+                4, 12, 20, 36, 44, 52, 60, // e1, e2, e3, e5, e6, e7, e8
+                24, 25, 26, 27, 29, 30, 31, // a4, b4, c4, d4, f4, g4, h4
+            ],
+        );
     }
 
     #[test]
     fn test_queen_lut() {
-        todo!()
+        let lut = generate_queen_lut();
+        helper(
+            lut,
+            TestSquare::A1,
+            vec![
+                9, 18, 27, 36, 45, 54, 63, // b2, c3, d4, e5, f6, g7, h8
+                1, 2, 3, 4, 5, 6, 7, // b1, c1, d1, e1, f1, g1, h1
+                8, 16, 24, 32, 40, 48, 56, // a2, a3, a4, a5, a6, a7, a8
+            ],
+        );
+        helper(
+            lut,
+            TestSquare::H1,
+            vec![
+                14, 21, 28, 35, 42, 49, 56, // g2, f3, e4, d5, c6, b7, a8
+                0, 1, 2, 3, 4, 5, 6, // a1, b1, c1, d1, e1, f1, g1, h1
+                15, 23, 31, 39, 47, 55, 63, // h2, h3, h4, h5, h6, h7, h8
+            ],
+        );
+        helper(
+            lut,
+            TestSquare::A8,
+            vec![
+                7, 14, 21, 28, 35, 42, 49, // h1, g2, f3, e4, d5, c6, b7, a8
+                0, 8, 16, 24, 32, 40, 48, // a1, a2, a3, a4, a5, a6, a7
+                57, 58, 59, 60, 61, 62, 63, // b8, c8, d8, e8, f8, g8, h8
+            ],
+        );
+        helper(
+            lut,
+            TestSquare::H8,
+            vec![
+                0, 9, 18, 27, 36, 45, 54, // a1, b2, c3, d4, e5, f6, g7
+                7, 15, 23, 31, 39, 47, 55, // h1, h2, h3, h4, h5, h6, h7
+                56, 57, 58, 59, 60, 61, 62, // a8, b8, c8, d8, e8, f8, g8
+            ],
+        );
+        helper(
+            lut,
+            TestSquare::D4,
+            vec![
+                0, 9, 18, 36, 45, 54, 63, // a1, b2, c3, e5, f6, g7, h8
+                6, 13, 20, 34, 41, 48, // g1, f2, e3, c5, b6, a7
+                3, 11, 19, 35, 43, 51, 59, // d1, d2, d3, d5, d6, d7, d8
+                24, 25, 26, 28, 29, 30, 31, // a4, b4, c4, e4, f4, g4, h4
+            ],
+        );
+        helper(
+            lut,
+            TestSquare::E4,
+            vec![
+                7, 14, 21, 35, 42, 49, 56, // h1, g2, f3, d5, c6, b7, a8
+                1, 10, 19, 37, 46, 55, // b1, c2, d3, f5, g6, h7
+                4, 12, 20, 36, 44, 52, 60, // e1, e2, e3, e5, e6, e7, e8
+                24, 25, 26, 27, 29, 30, 31, // a4, b4, c4, d4, f4, g4, h4
+            ],
+        );
     }
 
     #[test]
