@@ -10,8 +10,8 @@ impl Square {
     const fn new(i: usize) -> Self {
         Square {
             idx: i,
-            rank: i % 8,
-            file: i / 8,
+            rank: i / 8,
+            file: i % 8,
             board: 1u64 << i,
         }
     }
