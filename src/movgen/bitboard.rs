@@ -61,10 +61,12 @@
 //! ```
 
 use std::{
-    fmt::Display,
+    fmt::{Debug, Display},
     ops::{self, Deref, Shl},
 };
-use strum::EnumIter;
+use strum::{EnumIter, IntoEnumIterator};
+
+use crate::{impl_enum_index_math, square::OutOfBounds};
 
 /// Find the iterator element that intersects with some square.
 /// From this, the rank, file, diagonal and antidiagonal of a square are found.
@@ -74,7 +76,6 @@ where
     I: Copy + Into<u64>,
 {
     fn find_containing_square(&mut self, square: u64) -> Option<u64> {
-        dbg!(square);
         self.find(|&el| el.into() & square != 0).map(|el| el.into())
     }
 }
@@ -82,7 +83,7 @@ where
 /// Files are vertical columns on the chessboard.
 /// These can be represented as ones in every eight bit.
 #[repr(u64)]
-#[derive(Clone, Copy, Debug, EnumIter)]
+#[derive(Clone, Copy, Debug, EnumIter, PartialEq)]
 pub enum File {
     A = 0x01010101_01010101,
     B = 0x02020202_02020202,
@@ -100,12 +101,14 @@ impl From<File> for u64 {
     }
 }
 
+impl_enum_index_math!(File);
+
 impl ContainingSquare<File> for FileIter {}
 
 /// Ranks are horizontal rows on the chessboard.
 /// These can be represented as consecutive groups of eight ones.
 #[repr(u64)]
-#[derive(Clone, Copy, Debug, EnumIter)]
+#[derive(Clone, Copy, Debug, EnumIter, PartialEq)]
 pub enum Rank {
     One = 0x000000_00000000FF,
     Two = 0x000000_000000FF00,
@@ -123,12 +126,14 @@ impl From<Rank> for u64 {
     }
 }
 
+impl_enum_index_math!(Rank);
+
 impl ContainingSquare<Rank> for RankIter {}
 
 /// Diagonals are NW-to-SE lines, similar to matrix terminology.
 /// These can be represented by increasing and decreasing distances from the left edge.
 #[repr(u64)]
-#[derive(Clone, Copy, Debug, EnumIter)]
+#[derive(Clone, Copy, Debug, EnumIter, PartialEq)]
 pub enum Diagonal {
     /// a1 - a1
     MinusSeven = 0x00000000_00000001,
@@ -168,12 +173,14 @@ impl From<Diagonal> for u64 {
     }
 }
 
+impl_enum_index_math!(Diagonal);
+
 impl ContainingSquare<Diagonal> for DiagonalIter {}
 
 /// Antidiagonals are SW-to-NE lines, similar to matrix terminology.
 /// These can be represented by increasing and decreasing distances from the left edge.
 #[repr(u64)]
-#[derive(Clone, Copy, Debug, EnumIter)]
+#[derive(Clone, Copy, Debug, EnumIter, PartialEq)]
 pub enum AntiDiagonal {
     /// h1 - h1
     MinusSeven = 0x00000000_00000080,
@@ -213,11 +220,13 @@ impl From<AntiDiagonal> for u64 {
     }
 }
 
+impl_enum_index_math!(AntiDiagonal);
+
 impl ContainingSquare<AntiDiagonal> for AntiDiagonalIter {}
 
 /// An unsigned 64 bit integer representation of a chessboard, where every bit represents one square.
 /// Fore more information, see the [module-level docs](crate::bitboard).
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub struct BitBoard(u64);
 
 impl BitBoard {
@@ -242,6 +251,12 @@ impl ops::BitAndAssign for BitBoard {
 
 impl ops::BitXorAssign for BitBoard {
     fn bitxor_assign(&mut self, rhs: Self) {
+        self.0 ^= rhs.0;
+    }
+}
+
+impl ops::BitOrAssign for BitBoard {
+    fn bitor_assign(&mut self, rhs: Self) {
         self.0 ^= rhs.0;
     }
 }
