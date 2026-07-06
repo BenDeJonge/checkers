@@ -62,7 +62,7 @@
 
 use std::{
     fmt::{Debug, Display},
-    ops::{self, Deref, Shl},
+    ops::{self, BitAnd, Deref, Not, Shl},
 };
 use strum::{EnumIter, IntoEnumIterator};
 
@@ -229,6 +229,12 @@ impl ContainingSquare<AntiDiagonal> for AntiDiagonalIter {}
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct BitBoard(u64);
 
+impl std::fmt::Binary for BitBoard {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:064b}", self.0)
+    }
+}
+
 impl BitBoard {
     pub const fn new(board: u64) -> Self {
         Self(board)
@@ -271,6 +277,20 @@ impl Deref for BitBoard {
 impl From<u64> for BitBoard {
     fn from(value: u64) -> Self {
         BitBoard(value)
+    }
+}
+
+impl Not for BitBoard {
+    type Output = Self;
+    fn not(self) -> Self::Output {
+        BitBoard(!self.0)
+    }
+}
+
+impl BitAnd for BitBoard {
+    type Output = Self;
+    fn bitand(self, rhs: Self) -> Self::Output {
+        BitBoard(self.0 & rhs.0)
     }
 }
 

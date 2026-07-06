@@ -85,36 +85,49 @@ fn generate_queen_lut() -> BitBoardLUT {
     rook_lut
 }
 
+/// The knight can move to the opposite squares of the queen in a 5x5 grid.
+///
+/// ```text
+/// x . x . x
+/// . x x x .
+/// x x x x x
+/// . x x x .
+/// x . x . x
+/// ```
 fn generate_knight_lut() -> BitBoardLUT {
-    const KNIGHT_JUMPS: [u64; 4] = [6, 10, 15, 17];
-    let mut boards = [BitBoard::from(0); 64];
+    let mut queen = generate_queen_lut();
     for square in SQUARES.iter() {
         let rank = Rank::try_from(square.rank).unwrap();
         let mut ranks: u64 = 0;
-        for added in [Rank::One, Rank::Two] {
-            ranks |= u64::from(rank.saturating_add(&added));
-            ranks |= u64::from(rank.saturating_sub(&added));
+        for added in [1, 2] {
+            ranks |= u64::from(rank.saturating_add(added));
+            ranks |= u64::from(rank.saturating_sub(added));
         }
 
         let file = File::try_from(square.file).unwrap();
         let mut files: u64 = 0;
-        for added in [File::A, File::B] {
-            files &= u64::from(file.saturating_add(&added));
-            files &= u64::from(file.saturating_sub(&added));
+        for added in [1, 2] {
+            files |= u64::from(file.saturating_add(added));
+            files |= u64::from(file.saturating_sub(added));
         }
 
-        let mut knight = 0;
-        for jump in KNIGHT_JUMPS {
-            knight |= square.board.add(jump) | square.board.saturating_sub(jump);
-        }
-        knight &= (ranks & files) ^ square.board;
-        boards[square.idx] = BitBoard::from(knight);
+        queen[square.idx] = BitBoard::new(ranks & files & !square.board) & !queen[square.idx];
     }
-    boards
+    queen
 }
 
 fn generate_king_lut() -> BitBoardLUT {
-    todo!()
+    let mut boards = [BitBoard::from(0); 64];
+    for square in SQUARES.iter() {
+        let rank = Rank::try_from(square.rank).unwrap();
+        let ranks =
+            u64::from(rank) | u64::from(rank.saturating_add(1)) | u64::from(rank.saturating_sub(1));
+        let file = File::try_from(square.file).unwrap();
+        let files =
+            u64::from(file) | u64::from(file.saturating_add(1)) | u64::from(file.saturating_sub(1));
+        boards[square.idx] = BitBoard::new(ranks & files & !square.board);
+    }
+    boards
 }
 
 fn generate_pawn_white_lut() -> BitBoardLUT {
@@ -173,6 +186,7 @@ mod tests {
     use crate::movgen::{
         bitboard::BitBoard,
         move_lut::{
+            BitBoardLUT, generate_bishop_lut, generate_king_lut, generate_knight_lut,
             generate_queen_lut, generate_rook_lut,
         },
     };
@@ -353,12 +367,24 @@ mod tests {
 
     #[test]
     fn test_knight_lut() {
-        todo!()
+        let lut = generate_knight_lut();
+        helper(lut, TestSquare::A1, vec![10, 17]); // c2, b3
+        helper(lut, TestSquare::H1, vec![13, 22]); // f2, g3
+        helper(lut, TestSquare::A8, vec![41, 50]); // b6, c7
+        helper(lut, TestSquare::H8, vec![46, 53]); // g6, f7
+        helper(lut, TestSquare::D4, vec![10, 12, 17, 21, 33, 37, 42, 44]); // c2, e2, b3, f3, b5, f5, c6, e6
+        helper(lut, TestSquare::E4, vec![11, 13, 18, 22, 34, 38, 43, 45]); // d2, f2, c3, g3, c5, g5, d6, f6
     }
 
     #[test]
     fn test_king_lut() {
-        todo!()
+        let lut = generate_king_lut();
+        helper(lut, TestSquare::A1, vec![1, 8, 9]); // b1, a2, b2
+        helper(lut, TestSquare::H1, vec![6, 14, 15]); // g1, g2, h2
+        helper(lut, TestSquare::A8, vec![48, 49, 57]); // a7, b7, b8
+        helper(lut, TestSquare::H8, vec![54, 55, 62]); // g7, h7, g8
+        helper(lut, TestSquare::D4, vec![18, 19, 20, 26, 28, 34, 35, 36]); // c3, d3, e3, c4, e4, c5, d5, e5
+        helper(lut, TestSquare::E4, vec![19, 20, 21, 27, 29, 35, 36, 37]); // d3, e3, f3, d4, f4, d5, e5, f5 
     }
 
     #[test]
