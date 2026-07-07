@@ -263,7 +263,7 @@ impl ops::BitXorAssign for BitBoard {
 
 impl ops::BitOrAssign for BitBoard {
     fn bitor_assign(&mut self, rhs: Self) {
-        self.0 ^= rhs.0;
+        self.0 |= rhs.0;
     }
 }
 
@@ -672,7 +672,6 @@ mod tests {
         diagonals.push_back(Diagonal::Main);
         for row in 0..8 {
             for (col, &expected) in (0..8).zip(diagonals.iter()) {
-                dbg!(row, col, expected);
                 let square = 1u64.shl(row * 8 + col);
                 assert_eq!(
                     Diagonal::iter().find_containing_square(square),
@@ -713,7 +712,6 @@ mod tests {
         antidiagonals.push_front(AntiDiagonal::Main);
         for row in 0..8 {
             for (col, &expected) in (0..8).zip(antidiagonals.iter()) {
-                dbg!(row, col, expected);
                 let square = 1u64.shl(row * 8 + col);
                 assert_eq!(
                     AntiDiagonal::iter().find_containing_square(square),
