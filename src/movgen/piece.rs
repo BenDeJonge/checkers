@@ -1,3 +1,5 @@
+//! Basic enumerations to distinguish pieces of different colors.
+
 pub enum Color {
     White,
     Black,

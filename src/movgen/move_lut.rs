@@ -1,5 +1,7 @@
-use std::ops::Add;
-
+//! It would be wasteful to compute legal moves for a given piece continuously at runtime.
+//! Therefore, these moves are stored in a lookup table [`MoveLUT`] for each piece.
+//! The overarching [`PieceLUT`] can be constructed once during engine initialization and continuously queried
+//! with `O(1)` lookups of legal moves for a given piece on a given square.
 use strum::IntoEnumIterator;
 
 use crate::{
@@ -138,13 +140,6 @@ fn generate_pawn_black_lut() -> BitBoardLUT {
     todo!()
 }
 
-// TODO: index by piece somehow, distinguishing white/black pawns
-// Generate moves from ranks etc.:
-// - bishop: intersecting diagonals
-// - rook: intersecting rank + file
-// - queen: intersecting all
-// - king: 1s but clip to rows/col +- 1
-// - knight: 1s clipped to row/col +- 1 and NOT rook or bishop
 struct PieceLUT {
     bishop: MoveLUT,
     knight: MoveLUT,
