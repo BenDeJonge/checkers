@@ -108,7 +108,7 @@ impl ContainingSquare<File> for FileIter {}
 /// Ranks are horizontal rows on the chessboard.
 /// These can be represented as consecutive groups of eight ones.
 #[repr(u64)]
-#[derive(Clone, Copy, Debug, EnumIter, PartialEq)]
+#[derive(Clone, Copy, Debug, EnumIter, PartialEq, PartialOrd)]
 pub enum Rank {
     One = 0x000000_00000000FF,
     Two = 0x000000_000000FF00,
@@ -133,7 +133,7 @@ impl ContainingSquare<Rank> for RankIter {}
 /// Diagonals are NW-to-SE lines, similar to matrix terminology.
 /// These can be represented by increasing and decreasing distances from the left edge.
 #[repr(u64)]
-#[derive(Clone, Copy, Debug, EnumIter, PartialEq)]
+#[derive(Clone, Copy, Debug, EnumIter, PartialEq, PartialOrd)]
 pub enum Diagonal {
     /// a1 - a1
     MinusSeven = 0x00000000_00000001,

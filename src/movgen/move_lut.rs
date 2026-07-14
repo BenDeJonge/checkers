@@ -133,11 +133,27 @@ fn generate_king_lut() -> BitBoardLUT {
 }
 
 fn generate_pawn_white_lut() -> BitBoardLUT {
-    todo!()
+    let mut boards = [BitBoard::from(0); 64];
+    for square in SQUARES.iter() {
+        let rank = Rank::try_from(square.rank).unwrap();
+        let file = u64::from(File::try_from(square.file).unwrap());
+        let ranks = ((rank >= Rank::Two) as u64 * u64::MAX) & u64::from(rank.saturating_add(1))
+            | ((rank == Rank::Two) as u64 * u64::MAX) & u64::from(rank.saturating_add(2));
+        boards[square.idx] = BitBoard::new(ranks & file & !square.board);
+    }
+    boards
 }
 
 fn generate_pawn_black_lut() -> BitBoardLUT {
-    todo!()
+    let mut boards = [BitBoard::from(0); 64];
+    for square in SQUARES.iter() {
+        let rank = Rank::try_from(square.rank).unwrap();
+        let file = u64::from(File::try_from(square.file).unwrap());
+        let ranks = ((rank <= Rank::Seven) as u64 * u64::MAX) & u64::from(rank.saturating_sub(1))
+            | ((rank == Rank::Seven) as u64 * u64::MAX) & u64::from(rank.saturating_sub(2));
+        boards[square.idx] = BitBoard::new(ranks & file & !square.board);
+    }
+    boards
 }
 
 struct PieceLUT {
@@ -182,7 +198,8 @@ mod tests {
         bitboard::BitBoard,
         move_lut::{
             BitBoardLUT, generate_bishop_lut, generate_king_lut, generate_knight_lut,
-            generate_queen_lut, generate_rook_lut,
+            generate_pawn_black_lut, generate_pawn_white_lut, generate_queen_lut,
+            generate_rook_lut,
         },
     };
 
@@ -191,10 +208,12 @@ mod tests {
     enum TestSquare {
         A1 = 0,
         H1 = 7,
-        A8 = 56,
-        H8 = 63,
+        C2 = 10,
         D4 = 27,
         E4 = 28,
+        F7 = 53,
+        A8 = 56,
+        H8 = 63,
     }
 
     #[test]
@@ -226,6 +245,22 @@ mod tests {
             TestSquare::H8,
             vec![
                 0, 9, 18, 27, 36, 45, 54, // a1, b2, c3, d4, e5, f6, g7
+            ],
+        );
+        helper(
+            lut,
+            TestSquare::C2,
+            vec![
+                1, 19, 28, 37, 46, 55, // b1, d3, e4, f5, g6, h7
+                3, 17, 24, // d1, b3 a4
+            ],
+        );
+        helper(
+            lut,
+            TestSquare::F7,
+            vec![
+                39, 46, 60, // h5,g6,e8
+                8, 17, 26, 35, 44, 62, // a2, b3, c4, d5, e6, g8
             ],
         );
         helper(
@@ -279,6 +314,22 @@ mod tests {
             vec![
                 7, 15, 23, 31, 39, 47, 55, // h1, h2, h3, h4, h5, h6, h7
                 56, 57, 58, 59, 60, 61, 62, // a8, b8, c8, d8, e8, f8, g8
+            ],
+        );
+        helper(
+            lut,
+            TestSquare::C2,
+            vec![
+                2, 18, 26, 34, 42, 50, 58, // c1, c3, c4, c5, c6, c7, c8
+                8, 9, 11, 12, 13, 14, 15, // a2, b2, d2, e2, f2, g2, h2
+            ],
+        );
+        helper(
+            lut,
+            TestSquare::F7,
+            vec![
+                5, 13, 21, 29, 37, 45, 61, // f1, f2, f3, f4, f5, f6, f8
+                48, 49, 50, 51, 52, 54, 55, // a7, b7, d7, e7, f7, g7, h7
             ],
         );
         helper(
@@ -340,6 +391,26 @@ mod tests {
         );
         helper(
             lut,
+            TestSquare::C2,
+            vec![
+                2, 18, 26, 34, 42, 50, 58, // c1, c3, c4, c5, c6, c7, c8
+                8, 9, 11, 12, 13, 14, 15, // a2, b2, d2, e2, f2, g2, h2
+                1, 19, 28, 37, 46, 55, // b1, d3, e4, f5, g6, h7
+                3, 17, 24, // d1, b3 a4
+            ],
+        );
+        helper(
+            lut,
+            TestSquare::F7,
+            vec![
+                5, 13, 21, 29, 37, 45, 61, // f1, f2, f3, f4, f5, f6, f8
+                48, 49, 50, 51, 52, 54, 55, // a7, b7, d7, e7, f7, g7, h7
+                39, 46, 60, // h5,g6,e8
+                8, 17, 26, 35, 44, 62, // a2, b3, c4, d5, e6, g8
+            ],
+        );
+        helper(
+            lut,
             TestSquare::D4,
             vec![
                 0, 9, 18, 36, 45, 54, 63, // a1, b2, c3, e5, f6, g7, h8
@@ -367,6 +438,8 @@ mod tests {
         helper(lut, TestSquare::H1, vec![13, 22]); // f2, g3
         helper(lut, TestSquare::A8, vec![41, 50]); // b6, c7
         helper(lut, TestSquare::H8, vec![46, 53]); // g6, f7
+        helper(lut, TestSquare::C2, vec![0, 16, 25, 27, 4, 20]); // a1, a3, b4, d4, e1, e3
+        helper(lut, TestSquare::F7, vec![43, 59, 36, 38, 47, 63]); // d6, d8, e5, g5, h6, h8
         helper(lut, TestSquare::D4, vec![10, 12, 17, 21, 33, 37, 42, 44]); // c2, e2, b3, f3, b5, f5, c6, e6
         helper(lut, TestSquare::E4, vec![11, 13, 18, 22, 34, 38, 43, 45]); // d2, f2, c3, g3, c5, g5, d6, f6
     }
@@ -378,18 +451,36 @@ mod tests {
         helper(lut, TestSquare::H1, vec![6, 14, 15]); // g1, g2, h2
         helper(lut, TestSquare::A8, vec![48, 49, 57]); // a7, b7, b8
         helper(lut, TestSquare::H8, vec![54, 55, 62]); // g7, h7, g8
+        helper(lut, TestSquare::C2, vec![1, 2, 3, 9, 11, 17, 18, 19]); // b1, c1, d1, b2, d2, b3, c3, d3
+        helper(lut, TestSquare::F7, vec![44, 45, 46, 52, 54, 60, 61, 62]); // e6, g6, g6, e7, g7, e8, f8, g8
         helper(lut, TestSquare::D4, vec![18, 19, 20, 26, 28, 34, 35, 36]); // c3, d3, e3, c4, e4, c5, d5, e5
         helper(lut, TestSquare::E4, vec![19, 20, 21, 27, 29, 35, 36, 37]); // d3, e3, f3, d4, f4, d5, e5, f5 
     }
 
     #[test]
     fn test_pawn_white_lut() {
-        todo!()
+        let lut = generate_pawn_white_lut();
+        helper(lut, TestSquare::A1, vec![]); // no legal moves
+        helper(lut, TestSquare::H1, vec![]); // no legal moves
+        helper(lut, TestSquare::A8, vec![]); // no legal moves
+        helper(lut, TestSquare::H8, vec![]); // no legal moves
+        helper(lut, TestSquare::C2, vec![18, 26]); // c3, c4
+        helper(lut, TestSquare::F7, vec![61]); // f8
+        helper(lut, TestSquare::D4, vec![35]); // d5 
+        helper(lut, TestSquare::E4, vec![36]); // e5
     }
 
     #[test]
     fn test_pawn_black_lut() {
-        todo!()
+        let lut = generate_pawn_black_lut();
+        helper(lut, TestSquare::A1, vec![]); // no legal moves
+        helper(lut, TestSquare::H1, vec![]); // no legal moves
+        helper(lut, TestSquare::A8, vec![]); // no legal moves
+        helper(lut, TestSquare::H8, vec![]); // no legal moves
+        helper(lut, TestSquare::C2, vec![2]); // c1
+        helper(lut, TestSquare::F7, vec![37, 45]); // f5, f6
+        helper(lut, TestSquare::D4, vec![19]); // d3 
+        helper(lut, TestSquare::E4, vec![20]); // e3   
     }
 
     fn helper(lut: BitBoardLUT, square: TestSquare, squares: Vec<u64>) {
