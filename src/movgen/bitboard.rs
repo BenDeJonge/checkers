@@ -43,7 +43,7 @@
 //! The bits of a bitboard can be efficiently iterated through a [`BitBoardIterator`].
 //!
 //! ```rust
-//! # use checkers::bitboard::{File, BitBoard};
+//! # use checkers::movgen::bitboard::{File, BitBoard};
 //! # use std::iter;
 //! // 8 x . . . . . . .
 //! // 7 x . . . . . . .

@@ -1,3 +1,3 @@
 mod macros;
-mod movgen;
+pub mod movgen;
 mod square;
