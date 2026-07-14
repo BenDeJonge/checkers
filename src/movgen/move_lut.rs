@@ -181,11 +181,12 @@ impl PieceLUT {
 
     pub fn get(&self, piece: &Piece, square: &Square) -> &BitBoard {
         match *piece {
-            Piece::Bishop => self.bishop.get(square),
-            Piece::Knight => self.knight.get(square),
-            Piece::Rook => self.rook.get(square),
-            Piece::Queen => self.queen.get(square),
-            Piece::King => self.king.get(square),
+            Piece::Bishop(_) => self.bishop.get(square),
+            Piece::Knight(_) => self.knight.get(square),
+            Piece::Rook(_) => self.rook.get(square),
+            Piece::Queen(_) => self.queen.get(square),
+            Piece::King(_) => self.king.get(square),
+            // The pawns are distinguished by color as their move bitboards are unique i.e., they move in opposite directions.
             Piece::Pawn(White) => self.pawn_white.get(square),
             Piece::Pawn(Black) => self.pawn_black.get(square),
         }
