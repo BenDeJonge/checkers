@@ -15,3 +15,5 @@ creating something I regret i.e., can beat me.
 ## Features
 
 - Bitboards for efficient move generation
+- Lookup table for pseudo-legal piece moves, assuming an empty board
+- Rendering an ASCII representation of the board
