@@ -195,13 +195,9 @@ impl PieceLUT {
 
 #[cfg(test)]
 mod tests {
-    use crate::movgen::{
-        bitboard::BitBoard,
-        move_lut::{
-            BitBoardLUT, generate_bishop_lut, generate_king_lut, generate_knight_lut,
-            generate_pawn_black_lut, generate_pawn_white_lut, generate_queen_lut,
-            generate_rook_lut,
-        },
+    use crate::movgen::move_lut::{
+        BitBoardLUT, generate_bishop_lut, generate_king_lut, generate_knight_lut,
+        generate_pawn_black_lut, generate_pawn_white_lut, generate_queen_lut, generate_rook_lut,
     };
 
     #[repr(usize)]
@@ -223,62 +219,98 @@ mod tests {
         helper(
             lut,
             TestSquare::A1,
-            vec![
-                9, 18, 27, 36, 45, 54, 63, // b2, c3, d4, e5, f6, g7, h8
-            ],
+            ".......x\n\
+                      ......x.\n\
+                      .....x..\n\
+                      ....x...\n\
+                      ...x....\n\
+                      ..x.....\n\
+                      .x......\n\
+                      ........\n",
         );
         helper(
             lut,
             TestSquare::H1,
-            vec![
-                14, 21, 28, 35, 42, 49, 56, // g2, f3, e4, d5, c6, b7, a8
-            ],
+            "x.......\n\
+                      .x......\n\
+                      ..x.....\n\
+                      ...x....\n\
+                      ....x...\n\
+                      .....x..\n\
+                      ......x.\n\
+                      ........\n",
         );
         helper(
             lut,
             TestSquare::A8,
-            vec![
-                7, 14, 21, 28, 35, 42, 49, // h1, g2, f3, e4, d5, c6, b7, a8
-            ],
+            "........\n\
+                      .x......\n\
+                      ..x.....\n\
+                      ...x....\n\
+                      ....x...\n\
+                      .....x..\n\
+                      ......x.\n\
+                      .......x\n",
         );
         helper(
             lut,
             TestSquare::H8,
-            vec![
-                0, 9, 18, 27, 36, 45, 54, // a1, b2, c3, d4, e5, f6, g7
-            ],
+            "........\n\
+                      ......x.\n\
+                      .....x..\n\
+                      ....x...\n\
+                      ...x....\n\
+                      ..x.....\n\
+                      .x......\n\
+                      x.......\n",
         );
         helper(
             lut,
             TestSquare::C2,
-            vec![
-                1, 19, 28, 37, 46, 55, // b1, d3, e4, f5, g6, h7
-                3, 17, 24, // d1, b3 a4
-            ],
+            "........\n\
+                      .......x\n\
+                      ......x.\n\
+                      .....x..\n\
+                      x...x...\n\
+                      .x.x....\n\
+                      ........\n\
+                      .x.x....\n",
         );
         helper(
             lut,
             TestSquare::F7,
-            vec![
-                39, 46, 60, // h5,g6,e8
-                8, 17, 26, 35, 44, 62, // a2, b3, c4, d5, e6, g8
-            ],
+            "....x.x.\n\
+                      ........\n\
+                      ....x.x.\n\
+                      ...x...x\n\
+                      ..x.....\n\
+                      .x......\n\
+                      x.......\n\
+                      ........\n",
         );
         helper(
             lut,
             TestSquare::D4,
-            vec![
-                0, 9, 18, 36, 45, 54, 63, // a1, b2, c3, e5, f6, g7, h8
-                6, 13, 20, 34, 41, 48, // g1, f2, e3, c5, b6, a7
-            ],
+            ".......x\n\
+                      x.....x.\n\
+                      .x...x..\n\
+                      ..x.x...\n\
+                      ........\n\
+                      ..x.x...\n\
+                      .x...x..\n\
+                      x.....x.\n",
         );
         helper(
             lut,
             TestSquare::E4,
-            vec![
-                7, 14, 21, 35, 42, 49, 56, // h1, g2, f3, d5, c6, b7, a8
-                1, 10, 19, 37, 46, 55, // b1, c2, d3, f5, g6, h7
-            ],
+            "x.......\n\
+                      .x.....x\n\
+                      ..x...x.\n\
+                      ...x.x..\n\
+                      ........\n\
+                      ...x.x..\n\
+                      ..x...x.\n\
+                      .x.....x\n",
         );
     }
 
@@ -288,66 +320,98 @@ mod tests {
         helper(
             lut,
             TestSquare::A1,
-            vec![
-                1, 2, 3, 4, 5, 6, 7, // b1, c1, d1, e1, f1, g1, h1
-                8, 16, 24, 32, 40, 48, 56, // a2, a3, a4, a5, a6, a7, a8
-            ],
+            "x.......\n\
+                      x.......\n\
+                      x.......\n\
+                      x.......\n\
+                      x.......\n\
+                      x.......\n\
+                      x.......\n\
+                      .xxxxxxx\n",
         );
         helper(
             lut,
             TestSquare::H1,
-            vec![
-                0, 1, 2, 3, 4, 5, 6, // a1, b1, c1, d1, e1, f1, g1, h1
-                15, 23, 31, 39, 47, 55, 63, // h2, h3, h4, h5, h6, h7, h8
-            ],
+            ".......x\n\
+                      .......x\n\
+                      .......x\n\
+                      .......x\n\
+                      .......x\n\
+                      .......x\n\
+                      .......x\n\
+                      xxxxxxx.\n",
         );
         helper(
             lut,
             TestSquare::A8,
-            vec![
-                0, 8, 16, 24, 32, 40, 48, // a1, a2, a3, a4, a5, a6, a7
-                57, 58, 59, 60, 61, 62, 63, // b8, c8, d8, e8, f8, g8, h8
-            ],
+            ".xxxxxxx\n\
+                      x.......\n\
+                      x.......\n\
+                      x.......\n\
+                      x.......\n\
+                      x.......\n\
+                      x.......\n\
+                      x.......\n",
         );
         helper(
             lut,
             TestSquare::H8,
-            vec![
-                7, 15, 23, 31, 39, 47, 55, // h1, h2, h3, h4, h5, h6, h7
-                56, 57, 58, 59, 60, 61, 62, // a8, b8, c8, d8, e8, f8, g8
-            ],
+            "xxxxxxx.\n\
+                      .......x\n\
+                      .......x\n\
+                      .......x\n\
+                      .......x\n\
+                      .......x\n\
+                      .......x\n\
+                      .......x\n",
         );
         helper(
             lut,
             TestSquare::C2,
-            vec![
-                2, 18, 26, 34, 42, 50, 58, // c1, c3, c4, c5, c6, c7, c8
-                8, 9, 11, 12, 13, 14, 15, // a2, b2, d2, e2, f2, g2, h2
-            ],
+            "..x.....\n\
+                      ..x.....\n\
+                      ..x.....\n\
+                      ..x.....\n\
+                      ..x.....\n\
+                      ..x.....\n\
+                      xx.xxxxx\n\
+                      ..x.....\n",
         );
         helper(
             lut,
             TestSquare::F7,
-            vec![
-                5, 13, 21, 29, 37, 45, 61, // f1, f2, f3, f4, f5, f6, f8
-                48, 49, 50, 51, 52, 54, 55, // a7, b7, d7, e7, f7, g7, h7
-            ],
+            ".....x..\n\
+                      xxxxx.xx\n\
+                      .....x..\n\
+                      .....x..\n\
+                      .....x..\n\
+                      .....x..\n\
+                      .....x..\n\
+                      .....x..\n",
         );
         helper(
             lut,
             TestSquare::D4,
-            vec![
-                3, 11, 19, 35, 43, 51, 59, // d1, d2, d3, d5, d6, d7, d8
-                24, 25, 26, 28, 29, 30, 31, // a4, b4, c4, e4, f4, g4, h4
-            ],
+            "...x....\n\
+                      ...x....\n\
+                      ...x....\n\
+                      ...x....\n\
+                      xxx.xxxx\n\
+                      ...x....\n\
+                      ...x....\n\
+                      ...x....\n",
         );
         helper(
             lut,
             TestSquare::E4,
-            vec![
-                4, 12, 20, 36, 44, 52, 60, // e1, e2, e3, e5, e6, e7, e8
-                24, 25, 26, 27, 29, 30, 31, // a4, b4, c4, d4, f4, g4, h4
-            ],
+            "....x...\n\
+                      ....x...\n\
+                      ....x...\n\
+                      ....x...\n\
+                      xxxx.xxx\n\
+                      ....x...\n\
+                      ....x...\n\
+                      ....x...\n",
         );
     }
 
@@ -357,137 +421,508 @@ mod tests {
         helper(
             lut,
             TestSquare::A1,
-            vec![
-                9, 18, 27, 36, 45, 54, 63, // b2, c3, d4, e5, f6, g7, h8
-                1, 2, 3, 4, 5, 6, 7, // b1, c1, d1, e1, f1, g1, h1
-                8, 16, 24, 32, 40, 48, 56, // a2, a3, a4, a5, a6, a7, a8
-            ],
+            "x......x\n\
+                      x.....x.\n\
+                      x....x..\n\
+                      x...x...\n\
+                      x..x....\n\
+                      x.x.....\n\
+                      xx......\n\
+                      .xxxxxxx\n",
         );
         helper(
             lut,
             TestSquare::H1,
-            vec![
-                14, 21, 28, 35, 42, 49, 56, // g2, f3, e4, d5, c6, b7, a8
-                0, 1, 2, 3, 4, 5, 6, // a1, b1, c1, d1, e1, f1, g1, h1
-                15, 23, 31, 39, 47, 55, 63, // h2, h3, h4, h5, h6, h7, h8
-            ],
+            "x......x\n\
+                      .x.....x\n\
+                      ..x....x\n\
+                      ...x...x\n\
+                      ....x..x\n\
+                      .....x.x\n\
+                      ......xx\n\
+                      xxxxxxx.\n",
         );
         helper(
             lut,
             TestSquare::A8,
-            vec![
-                7, 14, 21, 28, 35, 42, 49, // h1, g2, f3, e4, d5, c6, b7, a8
-                0, 8, 16, 24, 32, 40, 48, // a1, a2, a3, a4, a5, a6, a7
-                57, 58, 59, 60, 61, 62, 63, // b8, c8, d8, e8, f8, g8, h8
-            ],
+            ".xxxxxxx\n\
+                      xx......\n\
+                      x.x.....\n\
+                      x..x....\n\
+                      x...x...\n\
+                      x....x..\n\
+                      x.....x.\n\
+                      x......x\n",
         );
         helper(
             lut,
             TestSquare::H8,
-            vec![
-                0, 9, 18, 27, 36, 45, 54, // a1, b2, c3, d4, e5, f6, g7
-                7, 15, 23, 31, 39, 47, 55, // h1, h2, h3, h4, h5, h6, h7
-                56, 57, 58, 59, 60, 61, 62, // a8, b8, c8, d8, e8, f8, g8
-            ],
+            "xxxxxxx.\n\
+                      ......xx\n\
+                      .....x.x\n\
+                      ....x..x\n\
+                      ...x...x\n\
+                      ..x....x\n\
+                      .x.....x\n\
+                      x......x\n",
         );
         helper(
             lut,
             TestSquare::C2,
-            vec![
-                2, 18, 26, 34, 42, 50, 58, // c1, c3, c4, c5, c6, c7, c8
-                8, 9, 11, 12, 13, 14, 15, // a2, b2, d2, e2, f2, g2, h2
-                1, 19, 28, 37, 46, 55, // b1, d3, e4, f5, g6, h7
-                3, 17, 24, // d1, b3 a4
-            ],
+            "..x.....\n\
+                      ..x....x\n\
+                      ..x...x.\n\
+                      ..x..x..\n\
+                      x.x.x...\n\
+                      .xxx....\n\
+                      xx.xxxxx\n\
+                      .xxx....\n",
         );
         helper(
             lut,
             TestSquare::F7,
-            vec![
-                5, 13, 21, 29, 37, 45, 61, // f1, f2, f3, f4, f5, f6, f8
-                48, 49, 50, 51, 52, 54, 55, // a7, b7, d7, e7, f7, g7, h7
-                39, 46, 60, // h5,g6,e8
-                8, 17, 26, 35, 44, 62, // a2, b3, c4, d5, e6, g8
-            ],
+            "....xxx.\n\
+                      xxxxx.xx\n\
+                      ....xxx.\n\
+                      ...x.x.x\n\
+                      ..x..x..\n\
+                      .x...x..\n\
+                      x....x..\n\
+                      .....x..\n",
         );
         helper(
             lut,
             TestSquare::D4,
-            vec![
-                0, 9, 18, 36, 45, 54, 63, // a1, b2, c3, e5, f6, g7, h8
-                6, 13, 20, 34, 41, 48, // g1, f2, e3, c5, b6, a7
-                3, 11, 19, 35, 43, 51, 59, // d1, d2, d3, d5, d6, d7, d8
-                24, 25, 26, 28, 29, 30, 31, // a4, b4, c4, e4, f4, g4, h4
-            ],
+            "...x...x\n\
+                      x..x..x.\n\
+                      .x.x.x..\n\
+                      ..xxx...\n\
+                      xxx.xxxx\n\
+                      ..xxx...\n\
+                      .x.x.x..\n\
+                      x..x..x.\n",
         );
         helper(
             lut,
             TestSquare::E4,
-            vec![
-                7, 14, 21, 35, 42, 49, 56, // h1, g2, f3, d5, c6, b7, a8
-                1, 10, 19, 37, 46, 55, // b1, c2, d3, f5, g6, h7
-                4, 12, 20, 36, 44, 52, 60, // e1, e2, e3, e5, e6, e7, e8
-                24, 25, 26, 27, 29, 30, 31, // a4, b4, c4, d4, f4, g4, h4
-            ],
+            "x...x...\n\
+                      .x..x..x\n\
+                      ..x.x.x.\n\
+                      ...xxx..\n\
+                      xxxx.xxx\n\
+                      ...xxx..\n\
+                      ..x.x.x.\n\
+                      .x..x..x\n",
         );
     }
 
     #[test]
     fn test_knight_lut() {
         let lut = generate_knight_lut();
-        helper(lut, TestSquare::A1, vec![10, 17]); // c2, b3
-        helper(lut, TestSquare::H1, vec![13, 22]); // f2, g3
-        helper(lut, TestSquare::A8, vec![41, 50]); // b6, c7
-        helper(lut, TestSquare::H8, vec![46, 53]); // g6, f7
-        helper(lut, TestSquare::C2, vec![0, 16, 25, 27, 4, 20]); // a1, a3, b4, d4, e1, e3
-        helper(lut, TestSquare::F7, vec![43, 59, 36, 38, 47, 63]); // d6, d8, e5, g5, h6, h8
-        helper(lut, TestSquare::D4, vec![10, 12, 17, 21, 33, 37, 42, 44]); // c2, e2, b3, f3, b5, f5, c6, e6
-        helper(lut, TestSquare::E4, vec![11, 13, 18, 22, 34, 38, 43, 45]); // d2, f2, c3, g3, c5, g5, d6, f6
+        helper(
+            lut,
+            TestSquare::A1,
+            "........\n\
+                      ........\n\
+                      ........\n\
+                      ........\n\
+                      ........\n\
+                      .x......\n\
+                      ..x.....\n\
+                      ........\n",
+        );
+        helper(
+            lut,
+            TestSquare::H1,
+            "........\n\
+                      ........\n\
+                      ........\n\
+                      ........\n\
+                      ........\n\
+                      ......x.\n\
+                      .....x..\n\
+                      ........\n",
+        );
+        helper(
+            lut,
+            TestSquare::A8,
+            "........\n\
+                      ..x.....\n\
+                      .x......\n\
+                      ........\n\
+                      ........\n\
+                      ........\n\
+                      ........\n\
+                      ........\n",
+        );
+        helper(
+            lut,
+            TestSquare::H8,
+            "........\n\
+                      .....x..\n\
+                      ......x.\n\
+                      ........\n\
+                      ........\n\
+                      ........\n\
+                      ........\n\
+                      ........\n",
+        );
+        helper(
+            lut,
+            TestSquare::C2,
+            "........\n\
+                      ........\n\
+                      ........\n\
+                      ........\n\
+                      .x.x....\n\
+                      x...x...\n\
+                      ........\n\
+                      x...x...\n",
+        );
+        helper(
+            lut,
+            TestSquare::F7,
+            "...x...x\n\
+                      ........\n\
+                      ...x...x\n\
+                      ....x.x.\n\
+                      ........\n\
+                      ........\n\
+                      ........\n\
+                      ........\n",
+        );
+        helper(
+            lut,
+            TestSquare::D4,
+            "........\n\
+                      ........\n\
+                      ..x.x...\n\
+                      .x...x..\n\
+                      ........\n\
+                      .x...x..\n\
+                      ..x.x...\n\
+                      ........\n",
+        );
+        helper(
+            lut,
+            TestSquare::E4,
+            "........\n\
+                      ........\n\
+                      ...x.x..\n\
+                      ..x...x.\n\
+                      ........\n\
+                      ..x...x.\n\
+                      ...x.x..\n\
+                      ........\n",
+        );
     }
 
     #[test]
     fn test_king_lut() {
         let lut = generate_king_lut();
-        helper(lut, TestSquare::A1, vec![1, 8, 9]); // b1, a2, b2
-        helper(lut, TestSquare::H1, vec![6, 14, 15]); // g1, g2, h2
-        helper(lut, TestSquare::A8, vec![48, 49, 57]); // a7, b7, b8
-        helper(lut, TestSquare::H8, vec![54, 55, 62]); // g7, h7, g8
-        helper(lut, TestSquare::C2, vec![1, 2, 3, 9, 11, 17, 18, 19]); // b1, c1, d1, b2, d2, b3, c3, d3
-        helper(lut, TestSquare::F7, vec![44, 45, 46, 52, 54, 60, 61, 62]); // e6, g6, g6, e7, g7, e8, f8, g8
-        helper(lut, TestSquare::D4, vec![18, 19, 20, 26, 28, 34, 35, 36]); // c3, d3, e3, c4, e4, c5, d5, e5
-        helper(lut, TestSquare::E4, vec![19, 20, 21, 27, 29, 35, 36, 37]); // d3, e3, f3, d4, f4, d5, e5, f5 
+        helper(
+            lut,
+            TestSquare::A1,
+            "........\n\
+                      ........\n\
+                      ........\n\
+                      ........\n\
+                      ........\n\
+                      ........\n\
+                      xx......\n\
+                      .x......\n",
+        );
+        helper(
+            lut,
+            TestSquare::H1,
+            "........\n\
+                      ........\n\
+                      ........\n\
+                      ........\n\
+                      ........\n\
+                      ........\n\
+                      ......xx\n\
+                      ......x.\n",
+        );
+        helper(
+            lut,
+            TestSquare::A8,
+            ".x......\n\
+                      xx......\n\
+                      ........\n\
+                      ........\n\
+                      ........\n\
+                      ........\n\
+                      ........\n\
+                      ........\n",
+        );
+        helper(
+            lut,
+            TestSquare::H8,
+            "......x.\n\
+                      ......xx\n\
+                      ........\n\
+                      ........\n\
+                      ........\n\
+                      ........\n\
+                      ........\n\
+                      ........\n",
+        );
+        helper(
+            lut,
+            TestSquare::C2,
+            "........\n\
+                      ........\n\
+                      ........\n\
+                      ........\n\
+                      ........\n\
+                      .xxx....\n\
+                      .x.x....\n\
+                      .xxx....\n",
+        );
+        helper(
+            lut,
+            TestSquare::F7,
+            "....xxx.\n\
+                      ....x.x.\n\
+                      ....xxx.\n\
+                      ........\n\
+                      ........\n\
+                      ........\n\
+                      ........\n\
+                      ........\n",
+        );
+        helper(
+            lut,
+            TestSquare::D4,
+            "........\n\
+                      ........\n\
+                      ........\n\
+                      ..xxx...\n\
+                      ..x.x...\n\
+                      ..xxx...\n\
+                      ........\n\
+                      ........\n",
+        );
+        helper(
+            lut,
+            TestSquare::E4,
+            "........\n\
+                      ........\n\
+                      ........\n\
+                      ...xxx..\n\
+                      ...x.x..\n\
+                      ...xxx..\n\
+                      ........\n\
+                      ........\n",
+        );
     }
 
     #[test]
     fn test_pawn_white_lut() {
         let lut = generate_pawn_white_lut();
-        helper(lut, TestSquare::A1, vec![]); // no legal moves
-        helper(lut, TestSquare::H1, vec![]); // no legal moves
-        helper(lut, TestSquare::A8, vec![]); // no legal moves
-        helper(lut, TestSquare::H8, vec![]); // no legal moves
-        helper(lut, TestSquare::C2, vec![18, 26]); // c3, c4
-        helper(lut, TestSquare::F7, vec![61]); // f8
-        helper(lut, TestSquare::D4, vec![35]); // d5 
-        helper(lut, TestSquare::E4, vec![36]); // e5
+        helper(
+            lut,
+            TestSquare::A1,
+            "........\n\
+                      ........\n\
+                      ........\n\
+                      ........\n\
+                      ........\n\
+                      ........\n\
+                      ........\n\
+                      ........\n",
+        );
+        helper(
+            lut,
+            TestSquare::H1,
+            "........\n\
+                      ........\n\
+                      ........\n\
+                      ........\n\
+                      ........\n\
+                      ........\n\
+                      ........\n\
+                      ........\n",
+        );
+        helper(
+            lut,
+            TestSquare::A8,
+            "........\n\
+                      ........\n\
+                      ........\n\
+                      ........\n\
+                      ........\n\
+                      ........\n\
+                      ........\n\
+                      ........\n",
+        );
+        helper(
+            lut,
+            TestSquare::H8,
+            "........\n\
+                      ........\n\
+                      ........\n\
+                      ........\n\
+                      ........\n\
+                      ........\n\
+                      ........\n\
+                      ........\n",
+        );
+        helper(
+            lut,
+            TestSquare::C2,
+            "........\n\
+                      ........\n\
+                      ........\n\
+                      ........\n\
+                      ..x.....\n\
+                      ..x.....\n\
+                      ........\n\
+                      ........\n",
+        );
+        helper(
+            lut,
+            TestSquare::F7,
+            ".....x..\n\
+                      ........\n\
+                      ........\n\
+                      ........\n\
+                      ........\n\
+                      ........\n\
+                      ........\n\
+                      ........\n",
+        );
+        helper(
+            lut,
+            TestSquare::D4,
+            "........\n\
+                      ........\n\
+                      ........\n\
+                      ...x....\n\
+                      ........\n\
+                      ........\n\
+                      ........\n\
+                      ........\n",
+        );
+        helper(
+            lut,
+            TestSquare::E4,
+            "........\n\
+                      ........\n\
+                      ........\n\
+                      ....x...\n\
+                      ........\n\
+                      ........\n\
+                      ........\n\
+                      ........\n",
+        );
     }
 
     #[test]
     fn test_pawn_black_lut() {
         let lut = generate_pawn_black_lut();
-        helper(lut, TestSquare::A1, vec![]); // no legal moves
-        helper(lut, TestSquare::H1, vec![]); // no legal moves
-        helper(lut, TestSquare::A8, vec![]); // no legal moves
-        helper(lut, TestSquare::H8, vec![]); // no legal moves
-        helper(lut, TestSquare::C2, vec![2]); // c1
-        helper(lut, TestSquare::F7, vec![37, 45]); // f5, f6
-        helper(lut, TestSquare::D4, vec![19]); // d3 
-        helper(lut, TestSquare::E4, vec![20]); // e3   
+        helper(
+            lut,
+            TestSquare::A1,
+            "........\n\
+                      ........\n\
+                      ........\n\
+                      ........\n\
+                      ........\n\
+                      ........\n\
+                      ........\n\
+                      ........\n",
+        );
+        helper(
+            lut,
+            TestSquare::H1,
+            "........\n\
+                      ........\n\
+                      ........\n\
+                      ........\n\
+                      ........\n\
+                      ........\n\
+                      ........\n\
+                      ........\n",
+        );
+        helper(
+            lut,
+            TestSquare::A8,
+            "........\n\
+                      ........\n\
+                      ........\n\
+                      ........\n\
+                      ........\n\
+                      ........\n\
+                      ........\n\
+                      ........\n",
+        );
+        helper(
+            lut,
+            TestSquare::H8,
+            "........\n\
+                      ........\n\
+                      ........\n\
+                      ........\n\
+                      ........\n\
+                      ........\n\
+                      ........\n\
+                      ........\n",
+        );
+        helper(
+            lut,
+            TestSquare::C2,
+            "........\n\
+                      ........\n\
+                      ........\n\
+                      ........\n\
+                      ........\n\
+                      ........\n\
+                      ........\n\
+                      ..x.....\n",
+        );
+        helper(
+            lut,
+            TestSquare::F7,
+            "........\n\
+                      ........\n\
+                      .....x..\n\
+                      .....x..\n\
+                      ........\n\
+                      ........\n\
+                      ........\n\
+                      ........\n",
+        );
+        helper(
+            lut,
+            TestSquare::D4,
+            "........\n\
+                      ........\n\
+                      ........\n\
+                      ........\n\
+                      ........\n\
+                      ...x....\n\
+                      ........\n\
+                      ........\n",
+        );
+        helper(
+            lut,
+            TestSquare::E4,
+            "........\n\
+                      ........\n\
+                      ........\n\
+                      ........\n\
+                      ........\n\
+                      ....x...\n\
+                      ........\n\
+                      ........\n",
+        );
     }
 
-    fn helper(lut: BitBoardLUT, square: TestSquare, squares: Vec<u64>) {
+    fn helper(lut: BitBoardLUT, square: TestSquare, squares: &str) {
         let idx = square as usize;
-        let actual = lut[idx];
-        let expected = squares.into_iter().fold(0, |acc, e| acc | 1 << e);
-        assert_eq!(actual, BitBoard::new(expected), "{:?}", square);
+        let actual = format!("{}", lut[idx]);
+        assert_eq!(actual, squares, "{:?}", square);
     }
 }
