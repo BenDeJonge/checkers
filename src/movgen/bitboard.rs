@@ -250,6 +250,10 @@ impl BitBoard {
     pub fn iter_bits_masked(&self, mask: u64) -> impl Iterator<Item = bool> {
         MaskedBitBoardIterator::new(**self, mask)
     }
+
+    pub fn iter_ones(&self) -> impl Iterator<Item = usize> {
+        BitBoardOnesIterator::new(*self)
+    }
 }
 
 impl ops::BitAndAssign for BitBoard {
@@ -367,6 +371,28 @@ impl Iterator for BitBoardIterator {
     type Item = bool;
     fn next(&mut self) -> Option<Self::Item> {
         self.0.next()
+    }
+}
+
+struct BitBoardOnesIterator(u64);
+
+impl BitBoardOnesIterator {
+    pub fn new(board: BitBoard) -> Self {
+        Self(board.0)
+    }
+}
+
+impl Iterator for BitBoardOnesIterator {
+    type Item = usize;
+    fn next(&mut self) -> Option<Self::Item> {
+        if let Some(idx) = self.0.lowest_one() {
+            // Mask the last one.
+            // 0b0010 0100 ^ (1 << 2) = 0b0010 0100 ^ 0b0000 00100 = 0b0010 0000
+            self.0 ^= 1 << idx;
+            Some(idx as usize)
+        } else {
+            None
+        }
     }
 }
 
@@ -1056,5 +1082,20 @@ mod tests {
             antidiagonals.push_front(*positive.get(row).unwrap_or(&AntiDiagonal::Main));
             antidiagonals.pop_back();
         }
+    }
+
+    #[test]
+    fn test_bitboard_ones_iter() {
+        test_bitboard_ones_iter_helper(BitBoard::new(0b0000_0000), vec![]);
+        test_bitboard_ones_iter_helper(BitBoard::new(0b1111_1111), vec![0, 1, 2, 3, 4, 5, 6, 7]);
+        test_bitboard_ones_iter_helper(BitBoard::new(0b0000_0001), vec![0]);
+        test_bitboard_ones_iter_helper(BitBoard::new(0b1000_0000), vec![7]);
+        test_bitboard_ones_iter_helper(BitBoard::new(0b1000_0001), vec![0, 7]);
+        // Bender's appartment number in Futurama.
+        test_bitboard_ones_iter_helper(BitBoard::new(0b0010_0100), vec![2, 5]);
+    }
+
+    fn test_bitboard_ones_iter_helper(board: BitBoard, ones: Vec<usize>) {
+        test_iter_helper(board.iter_ones(), ones.into_iter());
     }
 }
