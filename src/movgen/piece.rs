@@ -2,13 +2,14 @@
 
 use std::fmt::Display;
 
-#[derive(Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Color {
     White,
     Black,
 }
 
 /// All available pieces on the chessboard.
+#[derive(Debug, PartialEq, Eq)]
 pub enum Piece {
     Pawn(Color),
     Knight(Color),

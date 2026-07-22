@@ -8,6 +8,7 @@ use crate::{
     square::{SQUARES, Square},
 };
 
+#[derive(Debug, PartialEq, Eq)]
 struct PieceBoard {
     piece: Piece,
     board: BitBoard,
@@ -51,6 +52,7 @@ impl PieceBoard {
     }
 }
 
+#[derive(Debug, PartialEq, Eq)]
 struct PieceState {
     king: PieceBoard,
     queen: PieceBoard,
@@ -73,6 +75,7 @@ impl PieceState {
     }
 }
 
+#[derive(Debug, PartialEq, Eq)]
 pub struct PlayerState {
     can_castle_queenside: bool,
     can_castle_kingside: bool,
@@ -101,6 +104,7 @@ impl PlayerState {
     }
 }
 
+#[derive(Debug, PartialEq, Eq)]
 pub struct GameState {
     to_play: Color,
     white: PlayerState,
@@ -114,6 +118,35 @@ impl GameState {
             white: PlayerState::new(Color::White),
             black: PlayerState::new(Color::Black),
         }
+    }
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub enum InvalidFENString {
+    InvalidRankLength(usize),
+}
+
+impl TryFrom<&str> for GameState {
+    type Error = InvalidFENString;
+    /// Try parsing from a FEN string.
+    ///
+    /// ```
+    /// # use checkers::game::GameState;
+    /// let state = GameState::try_from("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+    /// assert_eq!(state, Ok(GameState::default()));
+    /// ```
+    ///
+    /// FEN strings can be invalid for many reasons, as per [`InvalidFENString`].
+    ///
+    /// ```
+    /// # use checkers::game::GameState;
+    /// // The first row (8th rank) has 9 characters.
+    /// let state = GameState::try_from("rrnbqkbnr/8/8/8/8/8/8/RNBQKBNR w KQkq - 0 1");
+    /// assert_eq!(state, Err(InvalidFENString::InvalidRankLength(9)));
+    /// ```
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        // TODO: actually implement. Maybe use nom?
+        Ok(GameState::default())
     }
 }
 
@@ -317,5 +350,35 @@ mod tests {
         };
 
         pretty_assertions::assert_eq!(format!("{}", gamestate), expected);
+    }
+
+    #[test]
+    fn test_gamestate_from_fen_starting_position() {
+        todo!("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
+    }
+
+    #[test]
+    fn test_gamestate_from_fen_1e4() {
+        todo!("rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1")
+    }
+
+    #[test]
+    fn test_gamestate_from_fen_1e4c5() {
+        todo!("rnbqkbnr/pp1ppppp/8/2p5/4P3/8/PPPP1PPP/RNBQKBNR w KQkq c6 0 2")
+    }
+
+    #[test]
+    fn test_gamestate_from_fen_1e4c5_2nf3() {
+        todo!("rnbqkbnr/pp1ppppp/8/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2")
+    }
+
+    #[test]
+    fn test_gamestate_evergreen_game() {
+        todo!("1r3kr1/pbpBBp1p/1b3P2/8/8/2P2q2/P4PPP/3R2K1 b - - 0 24")
+    }
+
+    #[test]
+    fn test_gamestate_stalemate() {
+        todo!("8/8/8/8/8/7K/5Q2/7k b - - 1 1")
     }
 }

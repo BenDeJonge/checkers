@@ -1,7 +1,7 @@
 //! The lowest-level primitive of board geometry is the [`Square`], which encodes information
 //! to aid in localizing it on the board.
 
-#[derive(Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub struct Square {
     pub(crate) idx: usize,
     pub(crate) rank: usize,

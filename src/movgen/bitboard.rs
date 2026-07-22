@@ -265,7 +265,7 @@ impl ContainingSquare<AntiDiagonal> for AntiDiagonalIter {}
 
 /// An unsigned 64 bit integer representation of a chessboard, where every bit represents one square.
 /// Fore more information, see the [module-level docs](crate::bitboard).
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub struct BitBoard(u64);
 
 impl BitBoard {
