@@ -13,34 +13,34 @@ struct PieceBoard {
     board: BitBoard,
 }
 
-const BITBOARD_WHITE_KING: u64 = 0x00000000_00000010;
-const BITBOARD_WHITE_QUEEN: u64 = 0x00000000_00000008;
-const BITBOARD_WHITE_ROOK: u64 = 0x00000000_00000081;
-const BITBOARD_WHITE_BISHOP: u64 = 0x00000000_00000024;
-const BITBOARD_WHITE_KNIGHT: u64 = 0x00000000_00000042;
-const BITBOARD_WHITE_PAWN: u64 = 0x00000000_0000FF00;
-const BITBOARD_BLACK_KING: u64 = 0x10000000_00000000;
-const BITBOARD_BLACK_QUEEN: u64 = 0x08000000_00000000;
-const BITBOARD_BLACK_ROOK: u64 = 0x81000000_00000000;
-const BITBOARD_BLACK_BISHOP: u64 = 0x24000000_00000000;
-const BITBOARD_BLACK_KNIGHT: u64 = 0x42000000_00000000;
-const BITBOARD_BLACK_PAWN: u64 = 0x00FF0000_00000000;
+const BITBOARD_DEFAULT_WHITE_KING: u64 = 0x00000000_00000010;
+const BITBOARD_DEFAULT_WHITE_QUEEN: u64 = 0x00000000_00000008;
+const BITBOARD_DEFAULT_WHITE_ROOK: u64 = 0x00000000_00000081;
+const BITBOARD_DEFAULT_WHITE_BISHOP: u64 = 0x00000000_00000024;
+const BITBOARD_DEFAULT_WHITE_KNIGHT: u64 = 0x00000000_00000042;
+const BITBOARD_DEFAULT_WHITE_PAWN: u64 = 0x00000000_0000FF00;
+const BITBOARD_DEFAULT_BLACK_KING: u64 = 0x10000000_00000000;
+const BITBOARD_DEFAULT_BLACK_QUEEN: u64 = 0x08000000_00000000;
+const BITBOARD_DEFAULT_BLACK_ROOK: u64 = 0x81000000_00000000;
+const BITBOARD_DEFAULT_BLACK_BISHOP: u64 = 0x24000000_00000000;
+const BITBOARD_DEFAULT_BLACK_KNIGHT: u64 = 0x42000000_00000000;
+const BITBOARD_DEFAULT_BLACK_PAWN: u64 = 0x00FF0000_00000000;
 
 impl PieceBoard {
     pub fn new(piece: Piece) -> Self {
         let board = BitBoard::new(match piece {
-            Piece::King(Color::White) => BITBOARD_WHITE_KING,
-            Piece::Queen(Color::White) => BITBOARD_WHITE_QUEEN,
-            Piece::Rook(Color::White) => BITBOARD_WHITE_ROOK,
-            Piece::Bishop(Color::White) => BITBOARD_WHITE_BISHOP,
-            Piece::Knight(Color::White) => BITBOARD_WHITE_KNIGHT,
-            Piece::Pawn(Color::White) => BITBOARD_WHITE_PAWN,
-            Piece::King(Color::Black) => BITBOARD_BLACK_KING,
-            Piece::Queen(Color::Black) => BITBOARD_BLACK_QUEEN,
-            Piece::Rook(Color::Black) => BITBOARD_BLACK_ROOK,
-            Piece::Bishop(Color::Black) => BITBOARD_BLACK_BISHOP,
-            Piece::Knight(Color::Black) => BITBOARD_BLACK_KNIGHT,
-            Piece::Pawn(Color::Black) => BITBOARD_BLACK_PAWN,
+            Piece::King(Color::White) => BITBOARD_DEFAULT_WHITE_KING,
+            Piece::Queen(Color::White) => BITBOARD_DEFAULT_WHITE_QUEEN,
+            Piece::Rook(Color::White) => BITBOARD_DEFAULT_WHITE_ROOK,
+            Piece::Bishop(Color::White) => BITBOARD_DEFAULT_WHITE_BISHOP,
+            Piece::Knight(Color::White) => BITBOARD_DEFAULT_WHITE_KNIGHT,
+            Piece::Pawn(Color::White) => BITBOARD_DEFAULT_WHITE_PAWN,
+            Piece::King(Color::Black) => BITBOARD_DEFAULT_BLACK_KING,
+            Piece::Queen(Color::Black) => BITBOARD_DEFAULT_BLACK_QUEEN,
+            Piece::Rook(Color::Black) => BITBOARD_DEFAULT_BLACK_ROOK,
+            Piece::Bishop(Color::Black) => BITBOARD_DEFAULT_BLACK_BISHOP,
+            Piece::Knight(Color::Black) => BITBOARD_DEFAULT_BLACK_KNIGHT,
+            Piece::Pawn(Color::Black) => BITBOARD_DEFAULT_BLACK_PAWN,
         });
         Self { piece, board }
     }
