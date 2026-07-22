@@ -146,6 +146,17 @@ impl TryFrom<&str> for GameState {
     /// ```
     fn try_from(value: &str) -> Result<Self, Self::Error> {
         // TODO: actually implement. Maybe use nom?
+        // https://chess.stackexchange.com/questions/1482/how-do-you-know-when-a-fen-position-is-legal
+        // - count rows/cols
+        // - count pieces
+        // - empty squares/row <= 8
+        // - 1 white and 1 black king
+        // - kings separated by at least 1 square
+        // - non-active color not in check
+        // - active color not in illegal check (3+ or B+B, N+N, P+(P,B,N))
+        // - pawns not in rank 1 and 8
+        // - castling flag matches king/rook position
+        //
         Ok(GameState::default())
     }
 }
