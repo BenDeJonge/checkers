@@ -229,12 +229,6 @@ impl ContainingSquare<AntiDiagonal> for AntiDiagonalIter {}
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct BitBoard(u64);
 
-impl std::fmt::Binary for BitBoard {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:064b}", self.0)
-    }
-}
-
 impl BitBoard {
     pub const fn new(board: u64) -> Self {
         Self(board)
@@ -315,6 +309,12 @@ impl Display for BitBoard {
             writeln!(f, "{}", rank)?
         }
         Ok(())
+    }
+}
+
+impl std::fmt::Binary for BitBoard {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:064b}", self.0)
     }
 }
 
