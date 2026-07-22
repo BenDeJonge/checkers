@@ -1,12 +1,9 @@
-use std::{fmt::Display, str::Chars};
+use std::fmt::Display;
 
 use crate::{
     movgen::{
         bitboard::BitBoard,
-        piece::{
-            Color::{self, Black, White},
-            Piece::{self, King},
-        },
+        piece::{Color, Piece},
     },
     square::{SQUARES, Square},
 };
@@ -32,18 +29,18 @@ const BITBOARD_BLACK_PAWN: u64 = 0x00FF0000_00000000;
 impl PieceBoard {
     pub fn new(piece: Piece) -> Self {
         let board = BitBoard::new(match piece {
-            Piece::King(White) => BITBOARD_WHITE_KING,
-            Piece::Queen(White) => BITBOARD_WHITE_QUEEN,
-            Piece::Rook(White) => BITBOARD_WHITE_ROOK,
-            Piece::Bishop(White) => BITBOARD_WHITE_BISHOP,
-            Piece::Knight(White) => BITBOARD_WHITE_KNIGHT,
-            Piece::Pawn(White) => BITBOARD_WHITE_PAWN,
-            Piece::King(Black) => BITBOARD_BLACK_KING,
-            Piece::Queen(Black) => BITBOARD_BLACK_QUEEN,
-            Piece::Rook(Black) => BITBOARD_BLACK_ROOK,
-            Piece::Bishop(Black) => BITBOARD_BLACK_BISHOP,
-            Piece::Knight(Black) => BITBOARD_BLACK_KNIGHT,
-            Piece::Pawn(Black) => BITBOARD_BLACK_PAWN,
+            Piece::King(Color::White) => BITBOARD_WHITE_KING,
+            Piece::Queen(Color::White) => BITBOARD_WHITE_QUEEN,
+            Piece::Rook(Color::White) => BITBOARD_WHITE_ROOK,
+            Piece::Bishop(Color::White) => BITBOARD_WHITE_BISHOP,
+            Piece::Knight(Color::White) => BITBOARD_WHITE_KNIGHT,
+            Piece::Pawn(Color::White) => BITBOARD_WHITE_PAWN,
+            Piece::King(Color::Black) => BITBOARD_BLACK_KING,
+            Piece::Queen(Color::Black) => BITBOARD_BLACK_QUEEN,
+            Piece::Rook(Color::Black) => BITBOARD_BLACK_ROOK,
+            Piece::Bishop(Color::Black) => BITBOARD_BLACK_BISHOP,
+            Piece::Knight(Color::Black) => BITBOARD_BLACK_KNIGHT,
+            Piece::Pawn(Color::Black) => BITBOARD_BLACK_PAWN,
         });
         Self { piece, board }
     }
@@ -113,7 +110,7 @@ pub struct GameState {
 impl GameState {
     pub fn new() -> Self {
         Self {
-            to_play: White,
+            to_play: Color::White,
             white: PlayerState::new(Color::White),
             black: PlayerState::new(Color::Black),
         }
@@ -189,6 +186,7 @@ mod tests {
     };
     use pretty_assertions;
 
+    /// Test display for the opening position.
     #[test]
     fn test_display_gamestate_default() {
         let gamestate = GameState::default();
@@ -215,6 +213,9 @@ mod tests {
         pretty_assertions::assert_eq!(format!("{}", gamestate), expected);
     }
 
+    /// Test display for the final position of the Evergreen game after move 24.
+    /// Andersen - Dufresne, Berlin, 1852.
+    /// https://en.wikipedia.org/wiki/Evergreen_Game
     #[test]
     fn test_display_gamestate_evergreen_game() {
         let white_king = PieceBoard {
