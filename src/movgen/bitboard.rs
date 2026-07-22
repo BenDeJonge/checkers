@@ -341,8 +341,8 @@ impl MaskedBitBoardIterator {
     pub fn new(board: u64, mask: u64) -> Self {
         Self {
             board,
-            left: mask.trailing_zeros().into(),
-            right: mask.checked_ilog2().unwrap_or_default().into(),
+            left: mask.lowest_one().unwrap_or_default().into(),
+            right: mask.highest_one().unwrap_or_default().into(),
         }
     }
 }
