@@ -2,6 +2,7 @@
 
 use std::fmt::Display;
 
+#[derive(Clone, Copy)]
 pub enum Color {
     White,
     Black,
@@ -25,6 +26,22 @@ impl Piece {
             Self::Rook(_) => 5,
             Self::Queen(_) => 9,
             Self::King(_) => 1_000,
+        }
+    }
+    pub fn board_representation(&self) -> char {
+        match self {
+            Self::King(Color::White) => 'K',
+            Self::Queen(Color::White) => 'Q',
+            Self::Rook(Color::White) => 'R',
+            Self::Bishop(Color::White) => 'B',
+            Self::Knight(Color::White) => 'N',
+            Self::Pawn(Color::White) => 'P',
+            Self::King(Color::Black) => 'k',
+            Self::Queen(Color::Black) => 'q',
+            Self::Rook(Color::Black) => 'r',
+            Self::Bishop(Color::Black) => 'b',
+            Self::Knight(Color::Black) => 'n',
+            Self::Pawn(Color::Black) => 'p',
         }
     }
 }
