@@ -195,13 +195,9 @@ impl PieceLUT {
 
 #[cfg(test)]
 mod tests {
-    use crate::movgen::{
-        bitboard::BitBoard,
-        move_lut::{
-            BitBoardLUT, generate_bishop_lut, generate_king_lut, generate_knight_lut,
-            generate_pawn_black_lut, generate_pawn_white_lut, generate_queen_lut,
-            generate_rook_lut,
-        },
+    use crate::movgen::move_lut::{
+        BitBoardLUT, generate_bishop_lut, generate_king_lut, generate_knight_lut,
+        generate_pawn_black_lut, generate_pawn_white_lut, generate_queen_lut, generate_rook_lut,
     };
 
     #[repr(usize)]
