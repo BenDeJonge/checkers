@@ -16,7 +16,7 @@ struct PieceBoard {
     board: BitBoard,
 }
 
-const BITBOARD_WHITE_KING: u64 = 0x00000000_10000010; // first 1 should be 0
+const BITBOARD_WHITE_KING: u64 = 0x00000000_00000010;
 const BITBOARD_WHITE_QUEEN: u64 = 0x00000000_00000008;
 const BITBOARD_WHITE_ROOK: u64 = 0x00000000_00000081;
 const BITBOARD_WHITE_BISHOP: u64 = 0x00000000_00000024;
@@ -45,6 +45,11 @@ impl PieceBoard {
             Piece::Knight(Black) => BITBOARD_BLACK_KNIGHT,
             Piece::Pawn(Black) => BITBOARD_BLACK_PAWN,
         });
+        Self { piece, board }
+    }
+
+    pub fn empty(piece: Piece) -> Self {
+        let board = BitBoard::from(0x00000000_00000000);
         Self { piece, board }
     }
 }
@@ -143,14 +148,14 @@ impl Display for GameState {
             ] {
                 for idx in piece.board.iter_ones() {
                     let square = SQUARES[idx];
-                    board[square.rank][square.file] = piece.piece.board_representation();
+                    // Ranks are counted from 0 (1st rank) to 7 (8th rank).
+                    // Indexing in array starts from the top-left (a8).
+                    board[7 - square.rank][square.file] = piece.piece.board_representation();
                 }
             }
         }
         let mut buffer = String::with_capacity(BOARD_TOP_ROW.len() * BOARD_N_ROWS);
         buffer.push_str(BOARD_TOP_ROW);
-        // TODO: there is a bug here about the iteration direction.
-        // Perhaps changing the convention from 0 at a1 to 0 at a8 makes sense!
         for (r, row) in board.iter().enumerate() {
             buffer.push_str(&format!("{} ", 8 - r));
             for (c, col) in row.iter().enumerate() {
@@ -175,12 +180,17 @@ impl Display for GameState {
 
 #[cfg(test)]
 mod tests {
-    use crate::game::GameState;
+    use crate::{
+        game::{GameState, PieceBoard, PieceState, PlayerState},
+        movgen::{
+            bitboard::BitBoard,
+            piece::{Color, Piece},
+        },
+    };
+    use pretty_assertions;
 
     #[test]
-    fn test_display_gamestate() {
-        // TODO: spacing is ok but the iteration direction might be off.
-        // Black pieces are placed on white squares.
+    fn test_display_gamestate_default() {
         let gamestate = GameState::default();
         let expected = String::from(
             "  ┌───┬───┬───┬───┬───┬───┬───┬───┐\n\
@@ -202,6 +212,109 @@ mod tests {
                └───┴───┴───┴───┴───┴───┴───┴───┘\n    \
                  a   b   c   d   e   f   g   h",
         );
-        assert_eq!(format!("{}", gamestate), expected);
+        pretty_assertions::assert_eq!(format!("{}", gamestate), expected);
+    }
+
+    #[test]
+    fn test_display_gamestate_evergreen_game() {
+        let white_king = PieceBoard {
+            piece: Piece::King(Color::White),
+            board: BitBoard::from(0x00000000_00000040),
+        };
+        let white_queen = PieceBoard::empty(Piece::Queen(Color::White));
+        let white_rook = PieceBoard {
+            piece: Piece::Rook(Color::White),
+            board: BitBoard::from(0x00000000_00000008),
+        };
+        let white_bishop = PieceBoard {
+            piece: Piece::Bishop(Color::White),
+            board: BitBoard::from(0x00180000_00000000),
+        };
+        let white_knight = PieceBoard::empty(Piece::Knight(Color::White));
+        let white_pawn = PieceBoard {
+            piece: Piece::Pawn(Color::White),
+            board: BitBoard::from(0x00002000_0004E100),
+        };
+
+        let black_king = PieceBoard {
+            piece: Piece::King(Color::Black),
+            board: BitBoard::from(0x20000000_00000000),
+        };
+        let black_queen = PieceBoard {
+            piece: Piece::Queen(Color::Black),
+            board: BitBoard::from(0x00000000_00200000),
+        };
+        let black_rook = PieceBoard {
+            piece: Piece::Rook(Color::Black),
+            board: BitBoard::from(0x42000000_00000000),
+        };
+        let black_bishop = PieceBoard {
+            piece: Piece::Bishop(Color::Black),
+            board: BitBoard::from(0x00020200_00000000),
+        };
+        let black_knight = PieceBoard::empty(Piece::Knight(Color::Black));
+        let black_pawn = PieceBoard {
+            piece: Piece::Pawn(Color::Black),
+            board: BitBoard::from(0x00A50000_00000000),
+        };
+
+        let expected = String::from(
+            "  ┌───┬───┬───┬───┬───┬───┬───┬───┐\n\
+             8 │   │ r │   │   │   │ k │ r │   │\n  \
+               ├───┼───┼───┼───┼───┼───┼───┼───┤\n\
+             7 │ p │ b │ p │ B │ B │ p │   │ p │\n  \
+               ├───┼───┼───┼───┼───┼───┼───┼───┤\n\
+             6 │   │ b │   │   │   │ P │   │   │\n  \
+               ├───┼───┼───┼───┼───┼───┼───┼───┤\n\
+             5 │   │   │   │   │   │   │   │   │\n  \
+               ├───┼───┼───┼───┼───┼───┼───┼───┤\n\
+             4 │   │   │   │   │   │   │   │   │\n  \
+               ├───┼───┼───┼───┼───┼───┼───┼───┤\n\
+             3 │   │   │ P │   │   │ q │   │   │\n  \
+               ├───┼───┼───┼───┼───┼───┼───┼───┤\n\
+             2 │ P │   │   │   │   │ P │ P │ P │\n  \
+               ├───┼───┼───┼───┼───┼───┼───┼───┤\n\
+             1 │   │   │   │ R │   │   │ K │   │\n  \
+               └───┴───┴───┴───┴───┴───┴───┴───┘\n    \
+                 a   b   c   d   e   f   g   h",
+        );
+
+        let white_pieces = PieceState {
+            king: white_king,
+            queen: white_queen,
+            rook: white_rook,
+            bishop: white_bishop,
+            knight: white_knight,
+            pawn: white_pawn,
+        };
+        let white_player = PlayerState {
+            can_castle_kingside: false,
+            can_castle_queenside: false,
+            en_passant_square: None,
+            pieces: white_pieces,
+        };
+
+        let black_pieces = PieceState {
+            king: black_king,
+            queen: black_queen,
+            rook: black_rook,
+            bishop: black_bishop,
+            knight: black_knight,
+            pawn: black_pawn,
+        };
+        let black_player = PlayerState {
+            can_castle_kingside: false,
+            can_castle_queenside: false,
+            en_passant_square: None,
+            pieces: black_pieces,
+        };
+
+        let gamestate = GameState {
+            white: white_player,
+            black: black_player,
+            to_play: Color::Black,
+        };
+
+        pretty_assertions::assert_eq!(format!("{}", gamestate), expected);
     }
 }
