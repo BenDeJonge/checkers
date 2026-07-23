@@ -147,7 +147,7 @@ impl ContainingSquare<File> for FileIter {}
 /// Ranks are horizontal rows on the chessboard.
 /// These can be represented as consecutive groups of eight ones.
 #[repr(u64)]
-#[derive(Clone, Copy, Debug, EnumIter, PartialEq, PartialOrd)]
+#[derive(Clone, Copy, Debug, EnumIter, PartialEq, PartialOrd, Eq)]
 pub enum Rank {
     One = 0x000000_00000000FF,
     Two = 0x000000_000000FF00,
@@ -264,7 +264,7 @@ impl_enum_index_math!(AntiDiagonal);
 impl ContainingSquare<AntiDiagonal> for AntiDiagonalIter {}
 
 /// An unsigned 64 bit integer representation of a chessboard, where every bit represents one square.
-/// Fore more information, see the [module-level docs](crate::bitboard).
+/// Fore more information, see the [`crate::movgen::bitboard`] module-level docs.
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub struct BitBoard(u64);
 
