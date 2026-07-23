@@ -1,3 +1,4 @@
+mod fen;
 pub mod game;
 mod macros;
 pub mod movgen;

@@ -2,10 +2,21 @@
 
 use std::fmt::Display;
 
+use crate::fen::FENRepresentation;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Color {
     White,
     Black,
+}
+
+impl FENRepresentation for Color {
+    fn fen(&self) -> &str {
+        match *self {
+            Color::White => "w",
+            Color::Black => "b",
+        }
+    }
 }
 
 /// All available pieces on the chessboard.
@@ -17,6 +28,25 @@ pub enum Piece {
     Rook(Color),
     Queen(Color),
     King(Color),
+}
+
+impl FENRepresentation for Piece {
+    fn fen(&self) -> &str {
+        match self {
+            Self::King(Color::White) => "K",
+            Self::Queen(Color::White) => "Q",
+            Self::Rook(Color::White) => "R",
+            Self::Bishop(Color::White) => "B",
+            Self::Knight(Color::White) => "N",
+            Self::Pawn(Color::White) => "P",
+            Self::King(Color::Black) => "k",
+            Self::Queen(Color::Black) => "q",
+            Self::Rook(Color::Black) => "r",
+            Self::Bishop(Color::Black) => "b",
+            Self::Knight(Color::Black) => "n",
+            Self::Pawn(Color::Black) => "p",
+        }
+    }
 }
 
 impl Piece {
