@@ -1,6 +1,11 @@
-use std::fmt::Display;
+use std::{fmt::Display, num::NonZero};
 
 use crate::{
+    fen::{
+        FenBoard, InvalidFENString, try_get_fen_parts, try_parse_active_player, try_parse_board,
+        try_parse_castling_rights, try_parse_en_passant_square, try_parse_half_move_clock,
+        try_parse_move_clock,
+    },
     movgen::{
         bitboard::BitBoard,
         piece::{Color, Piece},
@@ -53,7 +58,7 @@ impl PieceBoard {
 }
 
 #[derive(Debug, PartialEq, Eq)]
-struct PieceState {
+pub struct PieceState {
     king: PieceBoard,
     queen: PieceBoard,
     rook: PieceBoard,
@@ -75,21 +80,60 @@ impl PieceState {
     }
 }
 
+struct PieceStates {
+    pub white: PieceState,
+    pub black: PieceState,
+}
+
+impl From<FenBoard> for PieceStates {
+    // TODO: it is very inconvenient that the fen index starts from the top left
+    // whereas our index starts from the bottom left. It would be much easier if they were the same.
+    fn from(value: FenBoard) -> Self {
+        todo!()
+    }
+}
+
+#[derive(Debug, Default, PartialEq, Eq, Clone, Copy)]
+pub struct CastlingRights {
+    kingside: bool,
+    queenside: bool,
+}
+
+impl CastlingRights {
+    pub fn new(kingside: bool, queenside: bool) -> Self {
+        Self {
+            kingside,
+            queenside,
+        }
+    }
+}
+
 #[derive(Debug, PartialEq, Eq)]
 pub struct PlayerState {
-    can_castle_queenside: bool,
-    can_castle_kingside: bool,
+    castling_rights: CastlingRights,
     en_passant_square: Option<Square>,
     pieces: PieceState,
 }
 
 impl PlayerState {
-    pub fn new(color: Color) -> Self {
+    // TODO: add color as a generic/typestate and make this new.
+    pub fn starting_position(color: Color) -> Self {
         Self {
-            can_castle_queenside: true,
-            can_castle_kingside: true,
+            castling_rights: CastlingRights::default(),
             en_passant_square: None,
             pieces: PieceState::new(color),
+        }
+    }
+
+    pub fn new(
+        castling_rights: CastlingRights,
+        en_passant_square: Option<Square>,
+        pieces: PieceState,
+    ) -> Self {
+        Self {
+            castling_rights,
+            en_passant_square,
+            pieces,
         }
     }
 
@@ -109,25 +153,42 @@ pub struct GameState {
     to_play: Color,
     white: PlayerState,
     black: PlayerState,
+    half_move_clock: usize,
+    move_clock: NonZero<usize>,
 }
 
-impl GameState {
-    pub fn new() -> Self {
+impl Default for GameState {
+    fn default() -> Self {
         Self {
             to_play: Color::White,
-            white: PlayerState::new(Color::White),
-            black: PlayerState::new(Color::Black),
+            white: PlayerState::starting_position(Color::White),
+            black: PlayerState::starting_position(Color::Black),
+            half_move_clock: usize::default(),
+            move_clock: NonZero::new(1).unwrap(),
         }
     }
 }
 
-#[derive(Debug, PartialEq, Eq)]
-pub enum InvalidFENString {
-    InvalidRankLength(usize),
+impl GameState {
+    pub fn new(
+        to_play: Color,
+        white: PlayerState,
+        black: PlayerState,
+        half_move_clock: usize,
+        move_clock: NonZero<usize>,
+    ) -> Self {
+        Self {
+            to_play,
+            white,
+            black,
+            half_move_clock,
+            move_clock,
+        }
+    }
 }
 
-impl TryFrom<&str> for GameState {
-    type Error = InvalidFENString;
+impl<'a> TryFrom<&'a str> for GameState {
+    type Error = InvalidFENString<'a>;
     /// Try parsing from a FEN string.
     ///
     /// ```
@@ -144,26 +205,29 @@ impl TryFrom<&str> for GameState {
     /// let state = GameState::try_from("rrnbqkbnr/8/8/8/8/8/8/RNBQKBNR w KQkq - 0 1");
     /// assert_eq!(state, Err(InvalidFENString::InvalidRankLength(9)));
     /// ```
-    fn try_from(value: &str) -> Result<Self, Self::Error> {
-        // TODO: actually implement. Maybe use nom?
-        // https://chess.stackexchange.com/questions/1482/how-do-you-know-when-a-fen-position-is-legal
-        // - count rows/cols
-        // - count pieces
-        // - empty squares/row <= 8
-        // - 1 white and 1 black king
-        // - kings separated by at least 1 square
-        // - non-active color not in check
-        // - active color not in illegal check (3+ or B+B, N+N, P+(P,B,N))
-        // - pawns not in rank 1 and 8
-        // - castling flag matches king/rook position
-        //
-        Ok(GameState::default())
-    }
-}
+    fn try_from(value: &'a str) -> Result<Self, Self::Error> {
+        let fen_parts = try_get_fen_parts(value)?;
+        let to_play = try_parse_active_player(fen_parts[1])?;
+        let [white_castle, black_castle] = try_parse_castling_rights(fen_parts[2])?;
+        let en_passant_square = try_parse_en_passant_square(to_play, fen_parts[3])?;
+        let move_clock = try_parse_move_clock(fen_parts[5])?;
+        let half_move_clock = try_parse_half_move_clock(fen_parts[4], move_clock)?;
+        // This is the most computational effort so do this last.
+        let piece_states: PieceStates = try_parse_board(fen_parts[0])?.into();
 
-impl Default for GameState {
-    fn default() -> Self {
-        Self::new()
+        let [white_en_passant, black_en_passant] = match to_play {
+            Color::White => [Some(en_passant_square), None],
+            Color::Black => [None, Some(en_passant_square)],
+        };
+        let white = PlayerState::new(white_castle, white_en_passant, piece_states.white);
+        let black = PlayerState::new(black_castle, black_en_passant, piece_states.black);
+        Ok(GameState::new(
+            to_play,
+            white,
+            black,
+            half_move_clock,
+            move_clock,
+        ))
     }
 }
 
@@ -220,9 +284,11 @@ impl Display for GameState {
 }
 
 #[cfg(test)]
-mod tests {
+mod tests_display {
+    use std::num::NonZero;
+
     use crate::{
-        game::{GameState, PieceBoard, PieceState, PlayerState},
+        game::{CastlingRights, GameState, PieceBoard, PieceState, PlayerState},
         movgen::{
             bitboard::BitBoard,
             piece::{Color, Piece},
@@ -232,7 +298,7 @@ mod tests {
 
     /// Test display for the opening position.
     #[test]
-    fn test_display_gamestate_default() {
+    fn test_default() {
         let gamestate = GameState::default();
         let expected = String::from(
             "  ┌───┬───┬───┬───┬───┬───┬───┬───┐\n\
@@ -261,7 +327,7 @@ mod tests {
     /// Andersen - Dufresne, Berlin, 1852.
     /// https://en.wikipedia.org/wiki/Evergreen_Game
     #[test]
-    fn test_display_gamestate_evergreen_game() {
+    fn test_evergreen_game() {
         let white_king = PieceBoard {
             piece: Piece::King(Color::White),
             board: BitBoard::from(0x00000000_00000040),
@@ -333,8 +399,7 @@ mod tests {
             pawn: white_pawn,
         };
         let white_player = PlayerState {
-            can_castle_kingside: false,
-            can_castle_queenside: false,
+            castling_rights: CastlingRights::new(false, false),
             en_passant_square: None,
             pieces: white_pieces,
         };
@@ -348,8 +413,7 @@ mod tests {
             pawn: black_pawn,
         };
         let black_player = PlayerState {
-            can_castle_kingside: false,
-            can_castle_queenside: false,
+            castling_rights: CastlingRights::new(false, false),
             en_passant_square: None,
             pieces: black_pieces,
         };
@@ -358,38 +422,43 @@ mod tests {
             white: white_player,
             black: black_player,
             to_play: Color::Black,
+            half_move_clock: 0,
+            move_clock: NonZero::new(24).unwrap(),
         };
 
         pretty_assertions::assert_eq!(format!("{}", gamestate), expected);
     }
+}
 
+#[cfg(test)]
+mod tests_from_fen {
     #[test]
-    fn test_gamestate_from_fen_starting_position() {
+    fn test_starting_position() {
         todo!("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
     }
 
     #[test]
-    fn test_gamestate_from_fen_1e4() {
+    fn test_1e4() {
         todo!("rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1")
     }
 
     #[test]
-    fn test_gamestate_from_fen_1e4c5() {
+    fn test_1e4c5() {
         todo!("rnbqkbnr/pp1ppppp/8/2p5/4P3/8/PPPP1PPP/RNBQKBNR w KQkq c6 0 2")
     }
 
     #[test]
-    fn test_gamestate_from_fen_1e4c5_2nf3() {
+    fn test_1e4c5_2nf3() {
         todo!("rnbqkbnr/pp1ppppp/8/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2")
     }
 
     #[test]
-    fn test_gamestate_evergreen_game() {
+    fn test_evergreen_game() {
         todo!("1r3kr1/pbpBBp1p/1b3P2/8/8/2P2q2/P4PPP/3R2K1 b - - 0 24")
     }
 
     #[test]
-    fn test_gamestate_stalemate() {
-        todo!("8/8/8/8/8/7K/5Q2/7k b - - 1 1")
+    fn test_stalemate() {
+        todo!("8/8/8/8/8/7K/5Q2/7k b - - 0 45")
     }
 }
