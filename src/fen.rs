@@ -58,9 +58,9 @@ pub fn try_get_fen_parts(fen: &str) -> Result<[&str; 6], InvalidFENString<'_>> {
     }
 }
 
-pub(crate) type FenBoard = [Option<Piece>; 64];
+pub(crate) type FENBoard = [Option<Piece>; 64];
 
-pub fn try_parse_board(board: &str) -> Result<FenBoard, InvalidFENString<'_>> {
+pub fn try_parse_board(board: &str) -> Result<FENBoard, InvalidFENString<'_>> {
     // https://chess.stackexchange.com/questions/1482/how-do-you-know-when-a-fen-position-is-legal
     // - count rows/cols
     // - count pieces

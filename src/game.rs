@@ -2,7 +2,7 @@ use std::{fmt::Display, num::NonZero};
 
 use crate::{
     fen::{
-        FenBoard, InvalidFENString, try_get_fen_parts, try_parse_active_player, try_parse_board,
+        FENBoard, InvalidFENString, try_get_fen_parts, try_parse_active_player, try_parse_board,
         try_parse_castling_rights, try_parse_en_passant_square, try_parse_half_move_clock,
         try_parse_move_clock,
     },
@@ -85,10 +85,10 @@ struct PieceStates {
     pub black: PieceState,
 }
 
-impl From<FenBoard> for PieceStates {
+impl From<FENBoard> for PieceStates {
     // TODO: it is very inconvenient that the fen index starts from the top left
     // whereas our index starts from the bottom left. It would be much easier if they were the same.
-    fn from(value: FenBoard) -> Self {
+    fn from(value: FENBoard) -> Self {
         todo!()
     }
 }
