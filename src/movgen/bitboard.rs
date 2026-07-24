@@ -273,6 +273,10 @@ impl BitBoard {
         Self(board)
     }
 
+    pub const fn empty() -> Self {
+        Self(0)
+    }
+
     pub fn iter_bits(&self) -> impl Iterator<Item = bool> {
         BitBoardIterator::new(**self)
     }
