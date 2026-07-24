@@ -8,74 +8,53 @@ use crate::{
     },
     movgen::{
         bitboard::BitBoard,
-        piece::{Color, Piece},
+        piece::{BoardNotation, Color, Piece},
     },
     square::{SQUARES, Square},
 };
 
-#[derive(Debug, PartialEq, Eq)]
-struct PieceBoard {
-    piece: Piece,
-    board: BitBoard,
-}
-
-const BITBOARD_DEFAULT_WHITE_KING: u64 = 0x00000000_00000010;
-const BITBOARD_DEFAULT_WHITE_QUEEN: u64 = 0x00000000_00000008;
-const BITBOARD_DEFAULT_WHITE_ROOK: u64 = 0x00000000_00000081;
-const BITBOARD_DEFAULT_WHITE_BISHOP: u64 = 0x00000000_00000024;
-const BITBOARD_DEFAULT_WHITE_KNIGHT: u64 = 0x00000000_00000042;
-const BITBOARD_DEFAULT_WHITE_PAWN: u64 = 0x00000000_0000FF00;
-const BITBOARD_DEFAULT_BLACK_KING: u64 = 0x10000000_00000000;
-const BITBOARD_DEFAULT_BLACK_QUEEN: u64 = 0x08000000_00000000;
-const BITBOARD_DEFAULT_BLACK_ROOK: u64 = 0x81000000_00000000;
-const BITBOARD_DEFAULT_BLACK_BISHOP: u64 = 0x24000000_00000000;
-const BITBOARD_DEFAULT_BLACK_KNIGHT: u64 = 0x42000000_00000000;
-const BITBOARD_DEFAULT_BLACK_PAWN: u64 = 0x00FF0000_00000000;
-
-impl PieceBoard {
-    pub fn new(piece: Piece) -> Self {
-        let board = BitBoard::new(match piece {
-            Piece::King(Color::White) => BITBOARD_DEFAULT_WHITE_KING,
-            Piece::Queen(Color::White) => BITBOARD_DEFAULT_WHITE_QUEEN,
-            Piece::Rook(Color::White) => BITBOARD_DEFAULT_WHITE_ROOK,
-            Piece::Bishop(Color::White) => BITBOARD_DEFAULT_WHITE_BISHOP,
-            Piece::Knight(Color::White) => BITBOARD_DEFAULT_WHITE_KNIGHT,
-            Piece::Pawn(Color::White) => BITBOARD_DEFAULT_WHITE_PAWN,
-            Piece::King(Color::Black) => BITBOARD_DEFAULT_BLACK_KING,
-            Piece::Queen(Color::Black) => BITBOARD_DEFAULT_BLACK_QUEEN,
-            Piece::Rook(Color::Black) => BITBOARD_DEFAULT_BLACK_ROOK,
-            Piece::Bishop(Color::Black) => BITBOARD_DEFAULT_BLACK_BISHOP,
-            Piece::Knight(Color::Black) => BITBOARD_DEFAULT_BLACK_KNIGHT,
-            Piece::Pawn(Color::Black) => BITBOARD_DEFAULT_BLACK_PAWN,
-        });
-        Self { piece, board }
-    }
-
-    pub fn empty(piece: Piece) -> Self {
-        let board = BitBoard::from(0x00000000_00000000);
-        Self { piece, board }
-    }
-}
+const BITBOARD_DEFAULT_WHITE_KING: BitBoard = BitBoard::new(0x00000000_00000010);
+const BITBOARD_DEFAULT_WHITE_QUEEN: BitBoard = BitBoard::new(0x00000000_00000008);
+const BITBOARD_DEFAULT_WHITE_ROOK: BitBoard = BitBoard::new(0x00000000_00000081);
+const BITBOARD_DEFAULT_WHITE_BISHOP: BitBoard = BitBoard::new(0x00000000_00000024);
+const BITBOARD_DEFAULT_WHITE_KNIGHT: BitBoard = BitBoard::new(0x00000000_00000042);
+const BITBOARD_DEFAULT_WHITE_PAWN: BitBoard = BitBoard::new(0x00000000_0000FF00);
+const BITBOARD_DEFAULT_BLACK_KING: BitBoard = BitBoard::new(0x10000000_00000000);
+const BITBOARD_DEFAULT_BLACK_QUEEN: BitBoard = BitBoard::new(0x08000000_00000000);
+const BITBOARD_DEFAULT_BLACK_ROOK: BitBoard = BitBoard::new(0x81000000_00000000);
+const BITBOARD_DEFAULT_BLACK_BISHOP: BitBoard = BitBoard::new(0x24000000_00000000);
+const BITBOARD_DEFAULT_BLACK_KNIGHT: BitBoard = BitBoard::new(0x42000000_00000000);
+const BITBOARD_DEFAULT_BLACK_PAWN: BitBoard = BitBoard::new(0x00FF0000_00000000);
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct PieceState {
-    king: PieceBoard,
-    queen: PieceBoard,
-    rook: PieceBoard,
-    bishop: PieceBoard,
-    knight: PieceBoard,
-    pawn: PieceBoard,
+    king: BitBoard,
+    queen: BitBoard,
+    rook: BitBoard,
+    bishop: BitBoard,
+    knight: BitBoard,
+    pawn: BitBoard,
 }
 
 impl PieceState {
-    pub fn new(color: Color) -> Self {
-        Self {
-            king: PieceBoard::new(Piece::King(color)),
-            queen: PieceBoard::new(Piece::Queen(color)),
-            rook: PieceBoard::new(Piece::Rook(color)),
-            bishop: PieceBoard::new(Piece::Bishop(color)),
-            knight: PieceBoard::new(Piece::Knight(color)),
-            pawn: PieceBoard::new(Piece::Pawn(color)),
+    fn starting_position(color: Color) -> Self {
+        match color {
+            Color::White => Self {
+                king: BITBOARD_DEFAULT_WHITE_KING,
+                queen: BITBOARD_DEFAULT_WHITE_QUEEN,
+                rook: BITBOARD_DEFAULT_WHITE_ROOK,
+                bishop: BITBOARD_DEFAULT_WHITE_BISHOP,
+                knight: BITBOARD_DEFAULT_WHITE_KNIGHT,
+                pawn: BITBOARD_DEFAULT_WHITE_PAWN,
+            },
+            Color::Black => Self {
+                king: BITBOARD_DEFAULT_BLACK_KING,
+                queen: BITBOARD_DEFAULT_BLACK_QUEEN,
+                rook: BITBOARD_DEFAULT_BLACK_ROOK,
+                bishop: BITBOARD_DEFAULT_BLACK_BISHOP,
+                knight: BITBOARD_DEFAULT_BLACK_KNIGHT,
+                pawn: BITBOARD_DEFAULT_BLACK_PAWN,
+            },
         }
     }
 }
@@ -116,15 +95,6 @@ pub struct PlayerState {
 }
 
 impl PlayerState {
-    // TODO: add color as a generic/typestate and make this new.
-    pub fn starting_position(color: Color) -> Self {
-        Self {
-            castling_rights: CastlingRights::default(),
-            en_passant_square: None,
-            pieces: PieceState::new(color),
-        }
-    }
-
     pub fn new(
         castling_rights: CastlingRights,
         en_passant_square: Option<Square>,
@@ -134,6 +104,14 @@ impl PlayerState {
             castling_rights,
             en_passant_square,
             pieces,
+        }
+    }
+
+    pub fn starting_position(color: Color) -> Self {
+        Self {
+            castling_rights: CastlingRights::default(),
+            en_passant_square: None,
+            pieces: PieceState::starting_position(color),
         }
     }
 
@@ -242,20 +220,23 @@ const BOARD_SEP: char = '│';
 impl Display for GameState {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut board = EMPTY_BOARD;
-        for pieces in [&self.white.pieces, &self.black.pieces] {
-            for piece in [
-                &pieces.king,
-                &pieces.queen,
-                &pieces.rook,
-                &pieces.bishop,
-                &pieces.knight,
-                &pieces.pawn,
+        for (color, pieces) in [
+            (Color::White, &self.white.pieces),
+            (Color::Black, &self.black.pieces),
+        ] {
+            for (piece, piece_board) in [
+                (Piece::King(color), &pieces.king),
+                (Piece::Queen(color), &pieces.queen),
+                (Piece::Rook(color), &pieces.rook),
+                (Piece::Bishop(color), &pieces.bishop),
+                (Piece::Knight(color), &pieces.knight),
+                (Piece::Pawn(color), &pieces.pawn),
             ] {
-                for idx in piece.board.iter_ones() {
+                for idx in piece_board.iter_ones() {
                     let square = SQUARES[idx];
                     // Ranks are counted from 0 (1st rank) to 7 (8th rank).
                     // Indexing in array starts from the top-left (a8).
-                    board[7 - square.rank][square.file] = piece.piece.board_representation();
+                    board[7 - square.rank][square.file] = piece.board_notation();
                 }
             }
         }
@@ -288,11 +269,8 @@ mod tests_display {
     use std::num::NonZero;
 
     use crate::{
-        game::{CastlingRights, GameState, PieceBoard, PieceState, PlayerState},
-        movgen::{
-            bitboard::BitBoard,
-            piece::{Color, Piece},
-        },
+        game::{CastlingRights, GameState, PieceState, PlayerState},
+        movgen::{bitboard::BitBoard, piece::Color},
     };
     use pretty_assertions;
 
@@ -328,46 +306,19 @@ mod tests_display {
     /// https://en.wikipedia.org/wiki/Evergreen_Game
     #[test]
     fn test_evergreen_game() {
-        let white_king = PieceBoard {
-            piece: Piece::King(Color::White),
-            board: BitBoard::from(0x00000000_00000040),
-        };
-        let white_queen = PieceBoard::empty(Piece::Queen(Color::White));
-        let white_rook = PieceBoard {
-            piece: Piece::Rook(Color::White),
-            board: BitBoard::from(0x00000000_00000008),
-        };
-        let white_bishop = PieceBoard {
-            piece: Piece::Bishop(Color::White),
-            board: BitBoard::from(0x00180000_00000000),
-        };
-        let white_knight = PieceBoard::empty(Piece::Knight(Color::White));
-        let white_pawn = PieceBoard {
-            piece: Piece::Pawn(Color::White),
-            board: BitBoard::from(0x00002000_0004E100),
-        };
+        let white_king = BitBoard::from(0x00000000_00000040);
+        let white_queen = BitBoard::empty();
+        let white_rook = BitBoard::from(0x00000000_00000008);
+        let white_bishop = BitBoard::from(0x00180000_00000000);
+        let white_knight = BitBoard::empty();
+        let white_pawn = BitBoard::from(0x00002000_0004E100);
 
-        let black_king = PieceBoard {
-            piece: Piece::King(Color::Black),
-            board: BitBoard::from(0x20000000_00000000),
-        };
-        let black_queen = PieceBoard {
-            piece: Piece::Queen(Color::Black),
-            board: BitBoard::from(0x00000000_00200000),
-        };
-        let black_rook = PieceBoard {
-            piece: Piece::Rook(Color::Black),
-            board: BitBoard::from(0x42000000_00000000),
-        };
-        let black_bishop = PieceBoard {
-            piece: Piece::Bishop(Color::Black),
-            board: BitBoard::from(0x00020200_00000000),
-        };
-        let black_knight = PieceBoard::empty(Piece::Knight(Color::Black));
-        let black_pawn = PieceBoard {
-            piece: Piece::Pawn(Color::Black),
-            board: BitBoard::from(0x00A50000_00000000),
-        };
+        let black_king = BitBoard::from(0x20000000_00000000);
+        let black_queen = BitBoard::from(0x00000000_00200000);
+        let black_rook = BitBoard::from(0x42000000_00000000);
+        let black_bishop = BitBoard::from(0x00020200_00000000);
+        let black_knight = BitBoard::empty();
+        let black_pawn = BitBoard::from(0x00A50000_00000000);
 
         let expected = String::from(
             "  ┌───┬───┬───┬───┬───┬───┬───┬───┐\n\
