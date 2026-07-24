@@ -22,103 +22,117 @@ impl FENRepresentation for Color {
 /// All available pieces on the chessboard.
 #[derive(Debug, PartialEq, Eq)]
 pub enum Piece {
-    Pawn(Color),
-    Knight(Color),
-    Bishop(Color),
-    Rook(Color),
-    Queen(Color),
     King(Color),
+    Queen(Color),
+    Rook(Color),
+    Bishop(Color),
+    Knight(Color),
+    Pawn(Color),
 }
 
 impl FENRepresentation for Piece {
     fn fen(&self) -> &str {
         match self {
-            Self::King(Color::White) => "K",
-            Self::Queen(Color::White) => "Q",
-            Self::Rook(Color::White) => "R",
-            Self::Bishop(Color::White) => "B",
-            Self::Knight(Color::White) => "N",
-            Self::Pawn(Color::White) => "P",
-            Self::King(Color::Black) => "k",
-            Self::Queen(Color::Black) => "q",
-            Self::Rook(Color::Black) => "r",
-            Self::Bishop(Color::Black) => "b",
-            Self::Knight(Color::Black) => "n",
-            Self::Pawn(Color::Black) => "p",
+            Piece::King(Color::White) => "K",
+            Piece::Queen(Color::White) => "Q",
+            Piece::Rook(Color::White) => "R",
+            Piece::Bishop(Color::White) => "B",
+            Piece::Knight(Color::White) => "N",
+            Piece::Pawn(Color::White) => "P",
+
+            Piece::King(Color::Black) => "k",
+            Piece::Queen(Color::Black) => "q",
+            Piece::Rook(Color::Black) => "r",
+            Piece::Bishop(Color::Black) => "b",
+            Piece::Knight(Color::Black) => "n",
+            Piece::Pawn(Color::Black) => "p",
         }
     }
 }
 
-impl Piece {
-    pub fn value(&self) -> usize {
-        match self {
-            Self::Pawn(_) => 1,
-            Self::Knight(_) | Self::Bishop(_) => 3,
-            Self::Rook(_) => 5,
-            Self::Queen(_) => 9,
-            Self::King(_) => 1_000,
-        }
-    }
-
-    /// Get a single-space character to populate an ASCII chess board.
-    pub fn board_representation(&self) -> char {
-        match self {
-            Self::King(Color::White) => 'K',
-            Self::Queen(Color::White) => 'Q',
-            Self::Rook(Color::White) => 'R',
-            Self::Bishop(Color::White) => 'B',
-            Self::Knight(Color::White) => 'N',
-            Self::Pawn(Color::White) => 'P',
-            Self::King(Color::Black) => 'k',
-            Self::Queen(Color::Black) => 'q',
-            Self::Rook(Color::Black) => 'r',
-            Self::Bishop(Color::Black) => 'b',
-            Self::Knight(Color::Black) => 'n',
-            Self::Pawn(Color::Black) => 'p',
-        }
-    }
-
+pub trait Notation {
     /// Annotate moves in algebraic notation e.g., `1. e4 e5 2. Ke2! Ke7!!`.
-    pub fn algebraic_name(&self) -> char {
+    fn algebraic_notation(&self) -> char;
+    /// Annotate moves in figurine algebraic notation e.g., `1. e4 e5 2. ♔e2! ♔e7!!`.
+    fn figurine_notation(&self) -> char;
+}
+
+impl Notation for Piece {
+    fn algebraic_notation(&self) -> char {
         match self {
-            Self::King(_) => 'K',
-            Self::Queen(_) => 'Q',
-            Self::Rook(_) => 'R',
-            Self::Bishop(_) => 'B',
-            Self::Knight(_) => 'N',
-            Self::Pawn(_) => '\0', // Pawn moves are written as simply `e4`.
+            Piece::King(_) => 'K',
+            Piece::Queen(_) => 'Q',
+            Piece::Rook(_) => 'R',
+            Piece::Bishop(_) => 'B',
+            Piece::Knight(_) => 'N',
+            Piece::Pawn(_) => '\0', // Pawn moves are written as simply `e4`.
         }
     }
 
-    /// Annotate moves in figurine algebraic notation e.g., `1. e4 e5 2. ♔e2! ♔e7!!`.
-    pub fn figurine(&self) -> char {
+    fn figurine_notation(&self) -> char {
         match self {
-            Self::King(_) => '♔',
-            Self::Queen(_) => '♕',
-            Self::Rook(_) => '♖',
-            Self::Bishop(_) => '♗',
-            Self::Knight(_) => '♘',
-            Self::Pawn(_) => '\0', // Pawn moves are written as simply `e4`.
+            Piece::King(_) => '♔',
+            Piece::Queen(_) => '♕',
+            Piece::Rook(_) => '♖',
+            Piece::Bishop(_) => '♗',
+            Piece::Knight(_) => '♘',
+            Piece::Pawn(_) => '\0', // Pawn moves are written as simply `e4`.
+        }
+    }
+}
+
+pub trait BoardNotation {
+    /// Get a single-space character to populate an ASCII chess board.
+    fn board_notation(&self) -> char;
+}
+impl BoardNotation for Piece {
+    fn board_notation(&self) -> char {
+        match self {
+            Piece::King(Color::White) => 'K',
+            Piece::Queen(Color::White) => 'Q',
+            Piece::Rook(Color::White) => 'R',
+            Piece::Bishop(Color::White) => 'B',
+            Piece::Knight(Color::White) => 'N',
+            Piece::Pawn(Color::White) => 'P',
+
+            Piece::King(Color::Black) => 'k',
+            Piece::Queen(Color::Black) => 'q',
+            Piece::Rook(Color::Black) => 'r',
+            Piece::Bishop(Color::Black) => 'b',
+            Piece::Knight(Color::Black) => 'n',
+            Piece::Pawn(Color::Black) => 'p',
         }
     }
 }
 
 impl Display for Piece {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let ch = match *self {
-            Self::King(Color::White) => '♔',
-            Self::Queen(Color::White) => '♕',
-            Self::Rook(Color::White) => '♖',
-            Self::Bishop(Color::White) => '♗',
-            Self::Knight(Color::White) => '♘',
-            Self::Pawn(Color::White) => '♙',
-            Self::King(Color::Black) => '♚',
-            Self::Queen(Color::Black) => '♛',
-            Self::Rook(Color::Black) => '♜',
-            Self::Bishop(Color::Black) => '♝',
-            Self::Knight(Color::Black) => '♞',
-            Self::Pawn(Color::Black) => '♟',
+        let ch = match self {
+            Piece::King(Color::White) => '♔',
+            Piece::Queen(Color::White) => '♕',
+            Piece::Rook(Color::White) => '♖',
+            Piece::Bishop(Color::White) => '♗',
+            Piece::Knight(Color::White) => '♘',
+            Piece::Pawn(Color::White) => '♙',
+
+            Piece::King(Color::Black) => '♚',
+            Piece::Queen(Color::Black) => '♛',
+            Piece::Rook(Color::Black) => '♜',
+            Piece::Bishop(Color::Black) => '♝',
+            Piece::Knight(Color::Black) => '♞',
+            Piece::Pawn(Color::Black) => '♟',
         };
         write!(f, "{ch}")
+    }
+}
+impl Piece {
+    pub fn value(&self) -> usize {
+        match self {
+            Piece::Pawn(_) => 1,
+            Piece::Knight(_) | Piece::Bishop(_) => 3,
+            Piece::Rook(_) => 5,
+            Piece::Queen(_) => 9,
+            Piece::King(_) => 1_000,
+        }
     }
 }
