@@ -195,30 +195,22 @@ impl PieceLUT {
 
 #[cfg(test)]
 mod tests {
-    use crate::movgen::move_lut::{
-        BitBoardLUT, generate_bishop_lut, generate_king_lut, generate_knight_lut,
-        generate_pawn_black_lut, generate_pawn_white_lut, generate_queen_lut, generate_rook_lut,
+    use crate::{
+        movgen::move_lut::{
+            BitBoardLUT, generate_bishop_lut, generate_king_lut, generate_knight_lut,
+            generate_pawn_black_lut, generate_pawn_white_lut, generate_queen_lut,
+            generate_rook_lut,
+        },
+        square::get_square_from_name,
     };
-
-    #[repr(usize)]
-    #[derive(Debug, Clone, Copy)]
-    enum TestSquare {
-        A1 = 0,
-        H1 = 7,
-        C2 = 10,
-        D4 = 27,
-        E4 = 28,
-        F7 = 53,
-        A8 = 56,
-        H8 = 63,
-    }
+    use pretty_assertions::assert_eq;
 
     #[test]
     fn test_bishop_lut() {
         let lut = generate_bishop_lut();
         helper(
             lut,
-            TestSquare::A1,
+            "a1",
             ".......x\n\
                       ......x.\n\
                       .....x..\n\
@@ -230,7 +222,7 @@ mod tests {
         );
         helper(
             lut,
-            TestSquare::H1,
+            "h1",
             "x.......\n\
                       .x......\n\
                       ..x.....\n\
@@ -242,7 +234,7 @@ mod tests {
         );
         helper(
             lut,
-            TestSquare::A8,
+            "a8",
             "........\n\
                       .x......\n\
                       ..x.....\n\
@@ -254,7 +246,7 @@ mod tests {
         );
         helper(
             lut,
-            TestSquare::H8,
+            "h8",
             "........\n\
                       ......x.\n\
                       .....x..\n\
@@ -266,7 +258,7 @@ mod tests {
         );
         helper(
             lut,
-            TestSquare::C2,
+            "c2",
             "........\n\
                       .......x\n\
                       ......x.\n\
@@ -278,7 +270,7 @@ mod tests {
         );
         helper(
             lut,
-            TestSquare::F7,
+            "f7",
             "....x.x.\n\
                       ........\n\
                       ....x.x.\n\
@@ -290,7 +282,7 @@ mod tests {
         );
         helper(
             lut,
-            TestSquare::D4,
+            "d4",
             ".......x\n\
                       x.....x.\n\
                       .x...x..\n\
@@ -302,7 +294,7 @@ mod tests {
         );
         helper(
             lut,
-            TestSquare::E4,
+            "e4",
             "x.......\n\
                       .x.....x\n\
                       ..x...x.\n\
@@ -319,7 +311,7 @@ mod tests {
         let lut = generate_rook_lut();
         helper(
             lut,
-            TestSquare::A1,
+            "a1",
             "x.......\n\
                       x.......\n\
                       x.......\n\
@@ -331,7 +323,7 @@ mod tests {
         );
         helper(
             lut,
-            TestSquare::H1,
+            "h1",
             ".......x\n\
                       .......x\n\
                       .......x\n\
@@ -343,7 +335,7 @@ mod tests {
         );
         helper(
             lut,
-            TestSquare::A8,
+            "a8",
             ".xxxxxxx\n\
                       x.......\n\
                       x.......\n\
@@ -355,7 +347,7 @@ mod tests {
         );
         helper(
             lut,
-            TestSquare::H8,
+            "h8",
             "xxxxxxx.\n\
                       .......x\n\
                       .......x\n\
@@ -367,7 +359,7 @@ mod tests {
         );
         helper(
             lut,
-            TestSquare::C2,
+            "c2",
             "..x.....\n\
                       ..x.....\n\
                       ..x.....\n\
@@ -379,7 +371,7 @@ mod tests {
         );
         helper(
             lut,
-            TestSquare::F7,
+            "f7",
             ".....x..\n\
                       xxxxx.xx\n\
                       .....x..\n\
@@ -391,7 +383,7 @@ mod tests {
         );
         helper(
             lut,
-            TestSquare::D4,
+            "d4",
             "...x....\n\
                       ...x....\n\
                       ...x....\n\
@@ -403,7 +395,7 @@ mod tests {
         );
         helper(
             lut,
-            TestSquare::E4,
+            "e4",
             "....x...\n\
                       ....x...\n\
                       ....x...\n\
@@ -420,7 +412,7 @@ mod tests {
         let lut = generate_queen_lut();
         helper(
             lut,
-            TestSquare::A1,
+            "a1",
             "x......x\n\
                       x.....x.\n\
                       x....x..\n\
@@ -432,7 +424,7 @@ mod tests {
         );
         helper(
             lut,
-            TestSquare::H1,
+            "h1",
             "x......x\n\
                       .x.....x\n\
                       ..x....x\n\
@@ -444,7 +436,7 @@ mod tests {
         );
         helper(
             lut,
-            TestSquare::A8,
+            "a8",
             ".xxxxxxx\n\
                       xx......\n\
                       x.x.....\n\
@@ -456,7 +448,7 @@ mod tests {
         );
         helper(
             lut,
-            TestSquare::H8,
+            "h8",
             "xxxxxxx.\n\
                       ......xx\n\
                       .....x.x\n\
@@ -468,7 +460,7 @@ mod tests {
         );
         helper(
             lut,
-            TestSquare::C2,
+            "c2",
             "..x.....\n\
                       ..x....x\n\
                       ..x...x.\n\
@@ -480,7 +472,7 @@ mod tests {
         );
         helper(
             lut,
-            TestSquare::F7,
+            "f7",
             "....xxx.\n\
                       xxxxx.xx\n\
                       ....xxx.\n\
@@ -492,7 +484,7 @@ mod tests {
         );
         helper(
             lut,
-            TestSquare::D4,
+            "d4",
             "...x...x\n\
                       x..x..x.\n\
                       .x.x.x..\n\
@@ -504,7 +496,7 @@ mod tests {
         );
         helper(
             lut,
-            TestSquare::E4,
+            "e4",
             "x...x...\n\
                       .x..x..x\n\
                       ..x.x.x.\n\
@@ -521,7 +513,7 @@ mod tests {
         let lut = generate_knight_lut();
         helper(
             lut,
-            TestSquare::A1,
+            "a1",
             "........\n\
                       ........\n\
                       ........\n\
@@ -533,7 +525,7 @@ mod tests {
         );
         helper(
             lut,
-            TestSquare::H1,
+            "h1",
             "........\n\
                       ........\n\
                       ........\n\
@@ -545,7 +537,7 @@ mod tests {
         );
         helper(
             lut,
-            TestSquare::A8,
+            "a8",
             "........\n\
                       ..x.....\n\
                       .x......\n\
@@ -557,7 +549,7 @@ mod tests {
         );
         helper(
             lut,
-            TestSquare::H8,
+            "h8",
             "........\n\
                       .....x..\n\
                       ......x.\n\
@@ -569,7 +561,7 @@ mod tests {
         );
         helper(
             lut,
-            TestSquare::C2,
+            "c2",
             "........\n\
                       ........\n\
                       ........\n\
@@ -581,7 +573,7 @@ mod tests {
         );
         helper(
             lut,
-            TestSquare::F7,
+            "f7",
             "...x...x\n\
                       ........\n\
                       ...x...x\n\
@@ -593,7 +585,7 @@ mod tests {
         );
         helper(
             lut,
-            TestSquare::D4,
+            "d4",
             "........\n\
                       ........\n\
                       ..x.x...\n\
@@ -605,7 +597,7 @@ mod tests {
         );
         helper(
             lut,
-            TestSquare::E4,
+            "e4",
             "........\n\
                       ........\n\
                       ...x.x..\n\
@@ -622,7 +614,7 @@ mod tests {
         let lut = generate_king_lut();
         helper(
             lut,
-            TestSquare::A1,
+            "a1",
             "........\n\
                       ........\n\
                       ........\n\
@@ -634,7 +626,7 @@ mod tests {
         );
         helper(
             lut,
-            TestSquare::H1,
+            "h1",
             "........\n\
                       ........\n\
                       ........\n\
@@ -646,7 +638,7 @@ mod tests {
         );
         helper(
             lut,
-            TestSquare::A8,
+            "a8",
             ".x......\n\
                       xx......\n\
                       ........\n\
@@ -658,7 +650,7 @@ mod tests {
         );
         helper(
             lut,
-            TestSquare::H8,
+            "h8",
             "......x.\n\
                       ......xx\n\
                       ........\n\
@@ -670,7 +662,7 @@ mod tests {
         );
         helper(
             lut,
-            TestSquare::C2,
+            "c2",
             "........\n\
                       ........\n\
                       ........\n\
@@ -682,7 +674,7 @@ mod tests {
         );
         helper(
             lut,
-            TestSquare::F7,
+            "f7",
             "....xxx.\n\
                       ....x.x.\n\
                       ....xxx.\n\
@@ -694,7 +686,7 @@ mod tests {
         );
         helper(
             lut,
-            TestSquare::D4,
+            "d4",
             "........\n\
                       ........\n\
                       ........\n\
@@ -706,7 +698,7 @@ mod tests {
         );
         helper(
             lut,
-            TestSquare::E4,
+            "e4",
             "........\n\
                       ........\n\
                       ........\n\
@@ -723,7 +715,7 @@ mod tests {
         let lut = generate_pawn_white_lut();
         helper(
             lut,
-            TestSquare::A1,
+            "a1",
             "........\n\
                       ........\n\
                       ........\n\
@@ -735,7 +727,7 @@ mod tests {
         );
         helper(
             lut,
-            TestSquare::H1,
+            "h1",
             "........\n\
                       ........\n\
                       ........\n\
@@ -747,7 +739,7 @@ mod tests {
         );
         helper(
             lut,
-            TestSquare::A8,
+            "a8",
             "........\n\
                       ........\n\
                       ........\n\
@@ -759,7 +751,7 @@ mod tests {
         );
         helper(
             lut,
-            TestSquare::H8,
+            "h8",
             "........\n\
                       ........\n\
                       ........\n\
@@ -771,7 +763,7 @@ mod tests {
         );
         helper(
             lut,
-            TestSquare::C2,
+            "c2",
             "........\n\
                       ........\n\
                       ........\n\
@@ -783,7 +775,7 @@ mod tests {
         );
         helper(
             lut,
-            TestSquare::F7,
+            "f7",
             ".....x..\n\
                       ........\n\
                       ........\n\
@@ -795,7 +787,7 @@ mod tests {
         );
         helper(
             lut,
-            TestSquare::D4,
+            "d4",
             "........\n\
                       ........\n\
                       ........\n\
@@ -807,7 +799,7 @@ mod tests {
         );
         helper(
             lut,
-            TestSquare::E4,
+            "e4",
             "........\n\
                       ........\n\
                       ........\n\
@@ -824,7 +816,7 @@ mod tests {
         let lut = generate_pawn_black_lut();
         helper(
             lut,
-            TestSquare::A1,
+            "a1",
             "........\n\
                       ........\n\
                       ........\n\
@@ -836,7 +828,7 @@ mod tests {
         );
         helper(
             lut,
-            TestSquare::H1,
+            "h1",
             "........\n\
                       ........\n\
                       ........\n\
@@ -848,7 +840,7 @@ mod tests {
         );
         helper(
             lut,
-            TestSquare::A8,
+            "a8",
             "........\n\
                       ........\n\
                       ........\n\
@@ -860,7 +852,7 @@ mod tests {
         );
         helper(
             lut,
-            TestSquare::H8,
+            "h8",
             "........\n\
                       ........\n\
                       ........\n\
@@ -872,7 +864,7 @@ mod tests {
         );
         helper(
             lut,
-            TestSquare::C2,
+            "c2",
             "........\n\
                       ........\n\
                       ........\n\
@@ -884,7 +876,7 @@ mod tests {
         );
         helper(
             lut,
-            TestSquare::F7,
+            "f7",
             "........\n\
                       ........\n\
                       .....x..\n\
@@ -896,7 +888,7 @@ mod tests {
         );
         helper(
             lut,
-            TestSquare::D4,
+            "d4",
             "........\n\
                       ........\n\
                       ........\n\
@@ -908,7 +900,7 @@ mod tests {
         );
         helper(
             lut,
-            TestSquare::E4,
+            "e4",
             "........\n\
                       ........\n\
                       ........\n\
@@ -920,9 +912,9 @@ mod tests {
         );
     }
 
-    fn helper(lut: BitBoardLUT, square: TestSquare, squares: &str) {
-        let idx = square as usize;
-        let actual = format!("{}", lut[idx]);
+    fn helper(lut: BitBoardLUT, name: &str, squares: &str) {
+        let square = get_square_from_name(name).unwrap();
+        let actual = format!("{}", lut[square.idx]);
         assert_eq!(actual, squares, "{:?}", square);
     }
 }
