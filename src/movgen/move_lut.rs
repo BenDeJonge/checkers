@@ -132,28 +132,41 @@ fn generate_king_lut() -> BitBoardLUT {
     boards
 }
 
-fn generate_pawn_white_lut() -> BitBoardLUT {
+fn generate_pawn_lut(
+    on_starting_rank: impl Fn(Rank) -> bool,
+    starting_step: impl Fn(Rank) -> Rank,
+    on_any_rank: impl Fn(Rank) -> bool,
+    any_step: impl Fn(Rank) -> Rank,
+) -> BitBoardLUT {
     let mut boards = [BitBoard::from(0); 64];
     for square in SQUARES.iter() {
         let rank = Rank::try_from(square.rank).unwrap();
         let file = u64::from(File::try_from(square.file).unwrap());
-        let ranks = ((rank >= Rank::Two) as u64 * u64::MAX) & u64::from(rank.saturating_add(1))
-            | ((rank == Rank::Two) as u64 * u64::MAX) & u64::from(rank.saturating_add(2));
+        let ranks = (on_starting_rank(rank) as u64 * u64::MAX) & u64::from(starting_step(rank))
+            | (on_any_rank(rank) as u64 * u64::MAX) & u64::from(any_step(rank));
         boards[square.idx] = BitBoard::new(ranks & file & !square.board);
     }
     boards
 }
 
+fn generate_pawn_white_lut() -> BitBoardLUT {
+    // In the used matrix notation, white pawns move to lower ranks when moving up.
+    generate_pawn_lut(
+        |rank| rank == Rank::Two,
+        |rank| rank.saturating_sub(2),
+        |rank| rank <= Rank::Two,
+        |rank| rank.saturating_sub(1),
+    )
+}
+
 fn generate_pawn_black_lut() -> BitBoardLUT {
-    let mut boards = [BitBoard::from(0); 64];
-    for square in SQUARES.iter() {
-        let rank = Rank::try_from(square.rank).unwrap();
-        let file = u64::from(File::try_from(square.file).unwrap());
-        let ranks = ((rank <= Rank::Seven) as u64 * u64::MAX) & u64::from(rank.saturating_sub(1))
-            | ((rank == Rank::Seven) as u64 * u64::MAX) & u64::from(rank.saturating_sub(2));
-        boards[square.idx] = BitBoard::new(ranks & file & !square.board);
-    }
-    boards
+    // In the used matrix notation, black pawns move to higher ranks when moving down.
+    generate_pawn_lut(
+        |rank| rank == Rank::Seven,
+        |rank| rank.saturating_add(2),
+        |rank| rank >= Rank::Seven,
+        |rank| rank.saturating_add(1),
+    )
 }
 
 struct PieceLUT {
@@ -915,6 +928,6 @@ mod tests {
     fn helper(lut: BitBoardLUT, name: &str, squares: &str) {
         let square = get_square_from_name(name).unwrap();
         let actual = format!("{}", lut[square.idx]);
-        assert_eq!(actual, squares, "{:?}", square);
+        assert_eq!(actual, squares, "{} {:?}", name, square);
     }
 }

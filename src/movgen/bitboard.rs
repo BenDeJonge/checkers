@@ -1203,3 +1203,74 @@ mod tests_iter {
         test_iter_helper(board.iter_ones(), ones.into_iter());
     }
 }
+
+#[cfg(test)]
+mod tests_enum_math {
+    use crate::movgen::bitboard::{Diagonal, File, Rank};
+
+    #[test]
+    fn test_rank_add() {
+        assert_eq!(Rank::One.saturating_add(0), Rank::One);
+        assert_eq!(Rank::One.saturating_add(1), Rank::One);
+        assert_eq!(Rank::One.saturating_add(2), Rank::One);
+        assert_eq!(Rank::One.saturating_add(6), Rank::One);
+        assert_eq!(Rank::One.saturating_add(7), Rank::One);
+        assert_eq!(Rank::One.saturating_add(8), Rank::One);
+        assert_eq!(Rank::One.saturating_add(1_000), Rank::One);
+    }
+
+    #[test]
+    fn test_rank_sub() {
+        assert_eq!(Rank::One.saturating_sub(0), Rank::One);
+        assert_eq!(Rank::One.saturating_sub(1), Rank::Two);
+        assert_eq!(Rank::One.saturating_sub(2), Rank::Three);
+        assert_eq!(Rank::One.saturating_sub(6), Rank::Seven);
+        assert_eq!(Rank::One.saturating_sub(7), Rank::Eight);
+        assert_eq!(Rank::One.saturating_sub(8), Rank::Eight);
+        assert_eq!(Rank::One.saturating_sub(1_000), Rank::Eight);
+    }
+
+    #[test]
+    fn test_file_add() {
+        assert_eq!(File::A.saturating_add(0), File::A);
+        assert_eq!(File::A.saturating_add(1), File::B);
+        assert_eq!(File::A.saturating_add(2), File::C);
+        assert_eq!(File::A.saturating_add(6), File::G);
+        assert_eq!(File::A.saturating_add(7), File::H);
+        assert_eq!(File::A.saturating_add(8), File::H);
+        assert_eq!(File::A.saturating_add(1_000), File::H);
+    }
+
+    #[test]
+    fn test_file_sub() {
+        assert_eq!(File::A.saturating_sub(0), File::A);
+        assert_eq!(File::A.saturating_sub(1), File::A);
+        assert_eq!(File::A.saturating_sub(2), File::A);
+        assert_eq!(File::A.saturating_sub(6), File::A);
+        assert_eq!(File::A.saturating_sub(7), File::A);
+        assert_eq!(File::A.saturating_sub(8), File::A);
+        assert_eq!(File::A.saturating_sub(1_000), File::A);
+    }
+
+    #[test]
+    fn test_diagonal_add() {
+        assert_eq!(Diagonal::Main.saturating_add(0), Diagonal::Main);
+        assert_eq!(Diagonal::Main.saturating_add(1), Diagonal::MinusOne);
+        assert_eq!(Diagonal::Main.saturating_add(2), Diagonal::MinusTwo);
+        assert_eq!(Diagonal::Main.saturating_add(6), Diagonal::MinusSix);
+        assert_eq!(Diagonal::Main.saturating_add(7), Diagonal::MinusSeven);
+        assert_eq!(Diagonal::Main.saturating_add(8), Diagonal::MinusSeven);
+        assert_eq!(Diagonal::Main.saturating_add(1_000), Diagonal::MinusSeven);
+    }
+
+    #[test]
+    fn test_diagonal_sub() {
+        assert_eq!(Diagonal::Main.saturating_sub(0), Diagonal::Main);
+        assert_eq!(Diagonal::Main.saturating_sub(1), Diagonal::PlusOne);
+        assert_eq!(Diagonal::Main.saturating_sub(2), Diagonal::PlusTwo);
+        assert_eq!(Diagonal::Main.saturating_sub(6), Diagonal::PlusSix);
+        assert_eq!(Diagonal::Main.saturating_sub(7), Diagonal::PlusSeven);
+        assert_eq!(Diagonal::Main.saturating_sub(8), Diagonal::PlusSeven);
+        assert_eq!(Diagonal::Main.saturating_sub(1_000), Diagonal::PlusSeven);
+    }
+}
