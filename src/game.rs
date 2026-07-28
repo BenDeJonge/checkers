@@ -64,10 +64,8 @@ struct PieceStates {
     pub black: PieceState,
 }
 
-impl From<FENBoard> for PieceStates {
-    // TODO: it is very inconvenient that the fen index starts from the top left
-    // whereas our index starts from the bottom left. It would be much easier if they were the same.
-    fn from(value: FENBoard) -> Self {
+impl From<&FENBoard> for PieceStates {
+    fn from(value: &FENBoard) -> Self {
         todo!()
     }
 }
@@ -185,22 +183,23 @@ impl<'a> TryFrom<&'a str> for GameState {
     /// ```
     fn try_from(value: &'a str) -> Result<Self, Self::Error> {
         let fen_parts = try_get_fen_parts(value)?;
-        let to_play = try_parse_active_player(fen_parts[1])?;
+        let active_player = try_parse_active_player(fen_parts[1])?;
         let [white_castle, black_castle] = try_parse_castling_rights(fen_parts[2])?;
-        let en_passant_square = try_parse_en_passant_square(to_play, fen_parts[3])?;
+        let en_passant_square = try_parse_en_passant_square(active_player, fen_parts[3])?;
         let move_clock = try_parse_move_clock(fen_parts[5])?;
         let half_move_clock = try_parse_half_move_clock(fen_parts[4], move_clock)?;
         // This is the most computational effort so do this last.
-        let piece_states: PieceStates = try_parse_board(fen_parts[0])?.into();
+        let piece_states: PieceStates =
+            (&try_parse_board(fen_parts[0], en_passant_square.as_ref(), active_player)?).into();
 
-        let [white_en_passant, black_en_passant] = match to_play {
-            Color::White => [Some(en_passant_square), None],
-            Color::Black => [None, Some(en_passant_square)],
+        let [white_en_passant, black_en_passant] = match active_player {
+            Color::White => [en_passant_square, None],
+            Color::Black => [None, en_passant_square],
         };
         let white = PlayerState::new(white_castle, white_en_passant, piece_states.white);
         let black = PlayerState::new(black_castle, black_en_passant, piece_states.black);
         Ok(GameState::new(
-            to_play,
+            active_player,
             white,
             black,
             half_move_clock,

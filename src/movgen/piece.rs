@@ -2,12 +2,23 @@
 
 use std::fmt::Display;
 
+use strum::EnumIter;
+
 use crate::fen::FENRepresentation;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, EnumIter)]
 pub enum Color {
     White,
     Black,
+}
+
+impl Color {
+    pub fn opposite(&self) -> Self {
+        match *self {
+            Color::White => Color::Black,
+            Color::Black => Color::White,
+        }
+    }
 }
 
 impl FENRepresentation for Color {
@@ -20,7 +31,7 @@ impl FENRepresentation for Color {
 }
 
 /// All available pieces on the chessboard.
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Piece {
     King(Color),
     Queen(Color),
