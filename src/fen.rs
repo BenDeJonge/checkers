@@ -28,7 +28,7 @@ use crate::{
 };
 
 pub trait FENRepresentation {
-    fn fen(&self) -> &str;
+    fn fen(&self) -> char;
 }
 
 #[derive(Debug, PartialEq, Eq)]

@@ -11,10 +11,10 @@ pub enum Color {
 }
 
 impl FENRepresentation for Color {
-    fn fen(&self) -> &str {
+    fn fen(&self) -> char {
         match *self {
-            Color::White => "w",
-            Color::Black => "b",
+            Color::White => 'w',
+            Color::Black => 'b',
         }
     }
 }
@@ -31,21 +31,21 @@ pub enum Piece {
 }
 
 impl FENRepresentation for Piece {
-    fn fen(&self) -> &str {
+    fn fen(&self) -> char {
         match self {
-            Piece::King(Color::White) => "K",
-            Piece::Queen(Color::White) => "Q",
-            Piece::Rook(Color::White) => "R",
-            Piece::Bishop(Color::White) => "B",
-            Piece::Knight(Color::White) => "N",
-            Piece::Pawn(Color::White) => "P",
+            Piece::King(Color::White) => 'K',
+            Piece::Queen(Color::White) => 'Q',
+            Piece::Rook(Color::White) => 'R',
+            Piece::Bishop(Color::White) => 'B',
+            Piece::Knight(Color::White) => 'N',
+            Piece::Pawn(Color::White) => 'P',
 
-            Piece::King(Color::Black) => "k",
-            Piece::Queen(Color::Black) => "q",
-            Piece::Rook(Color::Black) => "r",
-            Piece::Bishop(Color::Black) => "b",
-            Piece::Knight(Color::Black) => "n",
-            Piece::Pawn(Color::Black) => "p",
+            Piece::King(Color::Black) => 'k',
+            Piece::Queen(Color::Black) => 'q',
+            Piece::Rook(Color::Black) => 'r',
+            Piece::Bishop(Color::Black) => 'b',
+            Piece::Knight(Color::Black) => 'n',
+            Piece::Pawn(Color::Black) => 'p',
         }
     }
 }
