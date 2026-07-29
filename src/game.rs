@@ -8,7 +8,11 @@ use crate::{
     },
     movgen::{
         bitboard::BitBoard,
-        piece::{BoardNotation, Color, Piece},
+        piece::{
+            BoardNotation,
+            Color::{self, Black, White},
+            Piece::{self, Bishop, King, Knight, Pawn, Queen, Rook},
+        },
     },
     square::{SQUARES, Square},
 };
@@ -58,23 +62,76 @@ impl PieceState {
             },
         }
     }
+
+    fn empty() -> Self {
+        Self {
+            king: BitBoard::empty(),
+            queen: BitBoard::empty(),
+            rook: BitBoard::empty(),
+            bishop: BitBoard::empty(),
+            knight: BitBoard::empty(),
+            pawn: BitBoard::empty(),
+        }
+    }
 }
 
+#[derive(Debug)]
 struct PieceStates {
     pub white: PieceState,
     pub black: PieceState,
 }
 
-impl From<&FENBoard> for PieceStates {
-    fn from(value: &FENBoard) -> Self {
-        todo!()
+impl PieceStates {
+    pub fn empty() -> Self {
+        Self {
+            white: PieceState::empty(),
+            black: PieceState::empty(),
+        }
     }
 }
 
-#[derive(Debug, Default, PartialEq, Eq, Clone, Copy)]
+impl From<&FENBoard> for PieceStates {
+    fn from(value: &FENBoard) -> Self {
+        let mut state = Self::empty();
+        for (i, piece) in value.iter().enumerate() {
+            if let Some(p) = piece {
+                let square = BitBoard::from(SQUARES[i].board);
+                dbg!(i, square, &piece);
+                match p {
+                    King(White) => state.white.king |= square,
+                    Queen(White) => state.white.queen |= square,
+                    Rook(White) => state.white.rook |= square,
+                    Bishop(White) => state.white.bishop |= square,
+                    Knight(White) => state.white.knight |= square,
+                    Pawn(White) => state.white.pawn |= square,
+
+                    King(Black) => state.black.king |= square,
+                    Queen(Black) => state.black.queen |= square,
+                    Rook(Black) => state.black.rook |= square,
+                    Bishop(Black) => state.black.bishop |= square,
+                    Knight(Black) => state.black.knight |= square,
+                    Pawn(Black) => state.black.pawn |= square,
+                };
+            }
+        }
+        dbg!(&state);
+        state
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub struct CastlingRights {
     kingside: bool,
     queenside: bool,
+}
+
+impl Default for CastlingRights {
+    fn default() -> Self {
+        Self {
+            kingside: true,
+            queenside: true,
+        }
+    }
 }
 
 impl CastlingRights {
@@ -114,7 +171,7 @@ impl PlayerState {
         }
     }
 
-    pub fn make_move(&mut self) {
+    pub fn make_move(&mut self, src: &Square, dst: &Square) {
         // update relevant square in the correct piecelist
     }
     fn promote_pawn(&mut self) {
@@ -178,6 +235,7 @@ impl<'a> TryFrom<&'a str> for GameState {
     ///
     /// ```
     /// # use checkers::game::GameState;
+    /// # use checkers::fen::InvalidFENString;
     /// // The first row (8th rank) has 9 characters.
     /// let state = GameState::try_from("rrnbqkbnr/8/8/8/8/8/8/RNBQKBNR w KQkq - 0 1");
     /// assert_eq!(state, Err(InvalidFENString::InvalidRankLength(9)));
@@ -192,7 +250,6 @@ impl<'a> TryFrom<&'a str> for GameState {
         // This is the most computational effort so do this last.
         let piece_states: PieceStates =
             (&try_parse_board(fen_parts[0], en_passant_square.as_ref(), active_player)?).into();
-
         let [white_en_passant, black_en_passant] = match active_player {
             Color::White => [en_passant_square, None],
             Color::Black => [None, en_passant_square],
@@ -386,24 +443,80 @@ mod tests_display {
 
 #[cfg(test)]
 mod tests_from_fen {
+    use std::num::NonZero;
+
+    use crate::{
+        game::{CastlingRights, GameState, PieceState, PlayerState},
+        movgen::{bitboard::bitboard_from_squares, piece::Color::Black},
+        square::get_square_from_name,
+    };
+    use pretty_assertions::assert_eq;
+
     #[test]
     fn test_starting_position() {
-        todo!("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
+        let state = GameState::try_from("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+        let expected = GameState::default();
+        assert_eq!(state, Ok(expected));
     }
 
     #[test]
     fn test_1e4() {
-        todo!("rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1")
+        let state =
+            GameState::try_from("rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1");
+        let white_pieces = PieceState {
+            king: bitboard_from_squares(["e1"]),
+            queen: bitboard_from_squares(["d1"]),
+            rook: bitboard_from_squares(["a1", "h1"]),
+            bishop: bitboard_from_squares(["c1", "f1"]),
+            knight: bitboard_from_squares(["b1", "g1"]),
+            pawn: bitboard_from_squares(["a2", "b2", "c2", "d2", "e4", "f2", "g2", "h2"]),
+        };
+        let black_pieces = PieceState::starting_position(Black);
+        let expected = GameState::new(
+            Black,
+            PlayerState::new(CastlingRights::new(true, true), None, white_pieces),
+            PlayerState::new(
+                CastlingRights::new(true, true),
+                get_square_from_name("e3"),
+                black_pieces,
+            ),
+            1,
+            NonZero::new(1).unwrap(),
+        );
+
+        assert_eq!(state, Ok(expected));
     }
 
     #[test]
     fn test_1e4c5() {
-        todo!("rnbqkbnr/pp1ppppp/8/2p5/4P3/8/PPPP1PPP/RNBQKBNR w KQkq c6 0 2")
+        let state =
+            GameState::try_from("rnbqkbnr/pp1ppppp/8/2p5/4P3/8/PPPP1PPP/RNBQKBNR w KQkq c6 0 2");
+        let mut expected = GameState::default();
+        expected.white.make_move(
+            &get_square_from_name("e2").unwrap(),
+            &get_square_from_name("e4").unwrap(),
+        );
+        expected.black.make_move(
+            &get_square_from_name("c7").unwrap(),
+            &get_square_from_name("c5").unwrap(),
+        );
+        assert_eq!(state, Ok(expected));
     }
 
     #[test]
     fn test_1e4c5_2nf3() {
-        todo!("rnbqkbnr/pp1ppppp/8/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2")
+        let state =
+            GameState::try_from("rnbqkbnr/pp1ppppp/8/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2");
+        let mut expected = GameState::default();
+        expected.white.make_move(
+            &get_square_from_name("e2").unwrap(),
+            &get_square_from_name("e4").unwrap(),
+        );
+        expected.black.make_move(
+            &get_square_from_name("c7").unwrap(),
+            &get_square_from_name("c5").unwrap(),
+        );
+        assert_eq!(state, Ok(expected));
     }
 
     #[test]
