@@ -102,12 +102,12 @@ pub fn try_parse_board<'a>(
 fn try_get_board_ranks(board: &str) -> Result<[&str; 8], InvalidFENString<'_>> {
     // Two boundaries:
     // - Completely empty board of kings:
-    //   19 chars: 6 empty rows "8" + 2 rows "4x3" + 7 row separators "/"
-    //   4k3/8/8/8/8/8/8/4K3
+    //   17 chars: 7 empty rows "8" + 1 rows "x6x" + 7 row separators "/"
+    //   K6k/8/8/8/8/8/8/8
     // - Completely full board of bishops:
     //   71 chars: 8x8 squares + 7 row separators "/"
     //   bBbBkBbB/BbBbBbBb/bBbBbBbB/BbBbbbBb/bBbBbBbB/BbBbBbBb/bBbBbBbB/BbBbKbBb
-    if !(19..=71).contains(&board.len()) {
+    if !(17..=71).contains(&board.len()) {
         return Err(InvalidFENString::BoardOutOfBounds(board.len()));
     }
     let ranks = board.split('/').collect::<Vec<&str>>();
