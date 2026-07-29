@@ -13,18 +13,19 @@ use crate::{
     square::{SQUARES, Square},
 };
 
-const BITBOARD_DEFAULT_WHITE_KING: BitBoard = BitBoard::new(0x00000000_00000010);
-const BITBOARD_DEFAULT_WHITE_QUEEN: BitBoard = BitBoard::new(0x00000000_00000008);
-const BITBOARD_DEFAULT_WHITE_ROOK: BitBoard = BitBoard::new(0x00000000_00000081);
-const BITBOARD_DEFAULT_WHITE_BISHOP: BitBoard = BitBoard::new(0x00000000_00000024);
-const BITBOARD_DEFAULT_WHITE_KNIGHT: BitBoard = BitBoard::new(0x00000000_00000042);
-const BITBOARD_DEFAULT_WHITE_PAWN: BitBoard = BitBoard::new(0x00000000_0000FF00);
-const BITBOARD_DEFAULT_BLACK_KING: BitBoard = BitBoard::new(0x10000000_00000000);
-const BITBOARD_DEFAULT_BLACK_QUEEN: BitBoard = BitBoard::new(0x08000000_00000000);
-const BITBOARD_DEFAULT_BLACK_ROOK: BitBoard = BitBoard::new(0x81000000_00000000);
-const BITBOARD_DEFAULT_BLACK_BISHOP: BitBoard = BitBoard::new(0x24000000_00000000);
-const BITBOARD_DEFAULT_BLACK_KNIGHT: BitBoard = BitBoard::new(0x42000000_00000000);
-const BITBOARD_DEFAULT_BLACK_PAWN: BitBoard = BitBoard::new(0x00FF0000_00000000);
+const BITBOARD_DEFAULT_WHITE_KING: BitBoard = BitBoard::new(0x10000000_00000000);
+const BITBOARD_DEFAULT_WHITE_QUEEN: BitBoard = BitBoard::new(0x08000000_00000000);
+const BITBOARD_DEFAULT_WHITE_ROOK: BitBoard = BitBoard::new(0x81000000_00000000);
+const BITBOARD_DEFAULT_WHITE_BISHOP: BitBoard = BitBoard::new(0x24000000_00000000);
+const BITBOARD_DEFAULT_WHITE_KNIGHT: BitBoard = BitBoard::new(0x42000000_00000000);
+const BITBOARD_DEFAULT_WHITE_PAWN: BitBoard = BitBoard::new(0x00FF0000_00000000);
+
+const BITBOARD_DEFAULT_BLACK_KING: BitBoard = BitBoard::new(0x00000000_00000010);
+const BITBOARD_DEFAULT_BLACK_QUEEN: BitBoard = BitBoard::new(0x00000000_00000008);
+const BITBOARD_DEFAULT_BLACK_ROOK: BitBoard = BitBoard::new(0x00000000_00000081);
+const BITBOARD_DEFAULT_BLACK_BISHOP: BitBoard = BitBoard::new(0x00000000_00000024);
+const BITBOARD_DEFAULT_BLACK_KNIGHT: BitBoard = BitBoard::new(0x00000000_00000042);
+const BITBOARD_DEFAULT_BLACK_PAWN: BitBoard = BitBoard::new(0x00000000_0000FF00);
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct PieceState {
@@ -233,9 +234,9 @@ impl Display for GameState {
             ] {
                 for idx in piece_board.iter_ones() {
                     let square = SQUARES[idx];
-                    // Ranks are counted from 0 (1st rank) to 7 (8th rank).
+                    // Ranks are counted from 0 (8th rank) to 7 (1st rank).
                     // Indexing in array starts from the top-left (a8).
-                    board[7 - square.rank][square.file] = piece.board_notation();
+                    board[square.rank][square.file] = piece.board_notation();
                 }
             }
         }
@@ -269,7 +270,10 @@ mod tests_display {
 
     use crate::{
         game::{CastlingRights, GameState, PieceState, PlayerState},
-        movgen::{bitboard::BitBoard, piece::Color},
+        movgen::{
+            bitboard::{BitBoard, bitboard_from_squares},
+            piece::Color,
+        },
     };
     use pretty_assertions;
 
@@ -305,19 +309,19 @@ mod tests_display {
     /// https://en.wikipedia.org/wiki/Evergreen_Game
     #[test]
     fn test_evergreen_game() {
-        let white_king = BitBoard::from(0x00000000_00000040);
+        let white_king = bitboard_from_squares(["g1"]);
         let white_queen = BitBoard::empty();
-        let white_rook = BitBoard::from(0x00000000_00000008);
-        let white_bishop = BitBoard::from(0x00180000_00000000);
+        let white_rook = bitboard_from_squares(["d1"]);
+        let white_bishop = bitboard_from_squares(["d7", "e7"]);
         let white_knight = BitBoard::empty();
-        let white_pawn = BitBoard::from(0x00002000_0004E100);
+        let white_pawn = bitboard_from_squares(["a2", "c3", "f6", "f2", "g2", "h2"]);
 
-        let black_king = BitBoard::from(0x20000000_00000000);
-        let black_queen = BitBoard::from(0x00000000_00200000);
-        let black_rook = BitBoard::from(0x42000000_00000000);
-        let black_bishop = BitBoard::from(0x00020200_00000000);
+        let black_king = bitboard_from_squares(["f8"]);
+        let black_queen = bitboard_from_squares(["f3"]);
+        let black_rook = bitboard_from_squares(["b8", "g8"]);
+        let black_bishop = bitboard_from_squares(["b6", "b7"]);
         let black_knight = BitBoard::empty();
-        let black_pawn = BitBoard::from(0x00A50000_00000000);
+        let black_pawn = bitboard_from_squares(["a7", "c7", "f7", "h7"]);
 
         let expected = String::from(
             "  ┌───┬───┬───┬───┬───┬───┬───┬───┐\n\

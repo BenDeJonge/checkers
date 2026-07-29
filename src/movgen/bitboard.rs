@@ -105,7 +105,10 @@ use std::{
 };
 use strum::{EnumIter, IntoEnumIterator};
 
-use crate::{impl_enum_index_math, square::OutOfBounds};
+use crate::{
+    impl_enum_index_math,
+    square::{OutOfBounds, get_square_from_name},
+};
 
 /// Find the iterator element that intersects with some square.
 /// From this, the rank, file, diagonal and antidiagonal of a square are found.
@@ -427,6 +430,14 @@ impl Iterator for BitBoardOnesIterator {
             None
         }
     }
+}
+
+/// Transform a list of square ("e2", "c5", "f3") into a [BitBoard]. The names are assumed to be correct.
+pub fn bitboard_from_squares<'a>(names: impl IntoIterator<Item = &'a str>) -> BitBoard {
+    BitBoard::from(names.into_iter().fold(0, |mut acc, name| {
+        acc |= get_square_from_name(name).unwrap().board;
+        acc
+    }))
 }
 
 /// The ordering of enum names carries semantic meaning, as these are indexed in the [`impl_enum_math` macro][crate::macros].
@@ -1272,5 +1283,26 @@ mod tests_enum_math {
         assert_eq!(Diagonal::Main.saturating_sub(7), Diagonal::PlusSeven);
         assert_eq!(Diagonal::Main.saturating_sub(8), Diagonal::PlusSeven);
         assert_eq!(Diagonal::Main.saturating_sub(1_000), Diagonal::PlusSeven);
+    }
+}
+
+#[cfg(test)]
+mod tests_bitboard_from_squares {
+    use crate::movgen::bitboard::bitboard_from_squares;
+
+    #[test]
+    fn test_empty_squares() {
+        todo!()
+    }
+
+    #[test]
+    fn test_valid_squares() {
+        todo!()
+    }
+
+    #[test]
+    #[should_panic(expected = "called `Option::unwrap()` on a `None` value")]
+    fn test_invalid_squares() {
+        bitboard_from_squares(["x9"]);
     }
 }
