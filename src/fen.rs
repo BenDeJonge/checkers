@@ -251,7 +251,12 @@ fn assert_valid_en_passant_square<'a>(
     active_player: Color,
 ) -> Result<(), InvalidFENString<'a>> {
     if let Some(square) = en_passant {
-        let idx = square.rank * 8 + square.file;
+        let rank = match active_player {
+            // White/black captures en passant "above"/"below" the black/white pawn.
+            Color::White => square.rank - 1,
+            Color::Black => square.rank + 1,
+        };
+        let idx = rank * 8 + square.file;
         if board.get(idx) != Some(&Some(Piece::Pawn(active_player.opposite()))) {
             Err(InvalidFENString::NoPawnOnEnPassantSquare)
         } else {
