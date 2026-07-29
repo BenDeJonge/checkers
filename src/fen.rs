@@ -432,7 +432,7 @@ mod tests {
                 Piece::{self, Bishop, King, Knight, Pawn, Queen, Rook},
             },
         },
-        square::{SQUARES, get_square_from_name},
+        square::SQUARES,
     };
 
     #[test]
@@ -512,13 +512,14 @@ mod tests {
 
     #[test]
     fn test_try_parse_en_passant_square() {
+        // The square the active player can capture on.
         assert_eq!(
-            try_parse_en_passant_square(Color::White, "e3"),
-            Ok(Some(SQUARES[44]))
+            try_parse_en_passant_square(Color::White, "e5"),
+            Ok(Some(SQUARES[28]))
         );
         assert_eq!(
-            try_parse_en_passant_square(Color::Black, "e5"),
-            Ok(Some(SQUARES[36]))
+            try_parse_en_passant_square(Color::Black, "e3"),
+            Ok(Some(SQUARES[44]))
         );
         assert_eq!(try_parse_en_passant_square(Color::Black, "-"), Ok(None));
         // White can never have a pawn that can be captured en passant on the 4th rank.
@@ -815,11 +816,7 @@ mod tests {
         );
         // Evergreen game
         assert_eq!(
-            try_parse_board(
-                "1r3kr1/pbpBBp1p/1b3P2/8/8/2P2q2/P4PPP/3R2K1",
-                get_square_from_name("e7").as_ref(),
-                Black
-            ),
+            try_parse_board("1r3kr1/pbpBBp1p/1b3P2/8/8/2P2q2/P4PPP/3R2K1", None, Black),
             Ok([
                 // Rank 8
                 None,
