@@ -150,6 +150,7 @@ fn try_parse_rank(rank: &str) -> Result<[Option<Piece>; 8], InvalidFENString<'_>
                     unknown => Err(InvalidFENString::UnknownRankChar(unknown)),
                 }?;
                 i += j;
+                j = 0;
                 if i >= 8 {
                     return Err(InvalidFENString::RankIndex(i));
                 }
