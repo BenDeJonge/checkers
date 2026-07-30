@@ -16,7 +16,7 @@
 //! checks are deliberately minimal, to avoid limiting the engine to boardstates
 //! that can be reached legally, as this would exclude Chess960, puzzles etc.
 
-use std::{convert::TryInto, num::NonZero};
+use std::{convert::TryInto, num::NonZero, ops::Deref};
 
 use strum::IntoEnumIterator;
 
@@ -24,7 +24,10 @@ use crate::{
     game::CastlingRights,
     movgen::{
         bitboard::Rank,
-        piece::{Color, Piece},
+        piece::{
+            Color::{self, Black, White},
+            Piece::{self, Bishop, King, Knight, Pawn, Queen, Rook},
+        },
     },
     square::{Square, get_square_from_name},
 };
@@ -45,7 +48,7 @@ pub enum InvalidFENString<'a> {
     MultipleKings(Color),
     AbsentKing(Color),
     PawnOnUnreachableRank(Color),
-    NoPawnOnEnPassantSquare,
+    NoPawnOnEnPassantSquare(usize),
     // try_parse_color
     Color(&'a str),
     // try_parse_castling_rights
@@ -77,7 +80,52 @@ fn vec_to_arr<T, const N: usize>(v: Vec<T>) -> [T; N] {
         .unwrap_or_else(|v: Vec<T>| panic!("Expected a Vec of length {} but it was {}", N, v.len()))
 }
 
-pub(crate) type FENBoard = [Option<Piece>; 64];
+#[derive(PartialEq, Debug)]
+pub struct FENBoard([Option<Piece>; 64]);
+impl Deref for FENBoard {
+    type Target = [Option<Piece>; 64];
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+#[derive(Debug)]
+pub struct InvalidFENBoardChar(char);
+impl TryFrom<[[char; 8]; 8]> for FENBoard {
+    type Error = InvalidFENBoardChar;
+    fn try_from(value: [[char; 8]; 8]) -> Result<Self, Self::Error> {
+        let mut board = [None; 64];
+        for (r, row) in value.iter().enumerate() {
+            for (c, ch) in row.iter().enumerate() {
+                let piece = match *ch {
+                    'K' => Some(King(White)),
+                    'Q' => Some(Queen(White)),
+                    'R' => Some(Rook(White)),
+                    'B' => Some(Bishop(White)),
+                    'N' => Some(Knight(White)),
+                    'P' => Some(Pawn(White)),
+
+                    'k' => Some(King(Black)),
+                    'q' => Some(Queen(Black)),
+                    'r' => Some(Rook(Black)),
+                    'b' => Some(Bishop(Black)),
+                    'n' => Some(Knight(Black)),
+                    'p' => Some(Pawn(Black)),
+
+                    ' ' => None,
+
+                    other => return Err(InvalidFENBoardChar(other)),
+                };
+
+                let idx = r * 8 + c;
+                board[idx] = piece;
+            }
+        }
+
+        Ok(FENBoard(board))
+    }
+}
+
 pub fn try_parse_board<'a>(
     board: &'a str,
     en_passant: Option<&Square>,
@@ -89,7 +137,7 @@ pub fn try_parse_board<'a>(
     for rank in ranks.iter() {
         fen_vec.extend(try_parse_rank(rank)?);
     }
-    let fen_board: FENBoard = vec_to_arr(fen_vec);
+    let fen_board = FENBoard(vec_to_arr(fen_vec));
 
     assert_pawns_on_allowed_ranks(&fen_board)?;
     assert_valid_checks(&fen_board)?;
@@ -253,12 +301,15 @@ fn assert_valid_en_passant_square<'a>(
     if let Some(square) = en_passant {
         let rank = match active_player {
             // White/black captures en passant "above"/"below" the black/white pawn.
-            Color::White => square.rank - 1,
-            Color::Black => square.rank + 1,
+            Color::White => square.rank + 1,
+            Color::Black => square.rank - 1,
         };
+        dbg!(rank, square);
         let idx = rank * 8 + square.file;
+        dbg!(board, board[idx]);
+        dbg!(board.get(idx));
         if board.get(idx) != Some(&Some(Piece::Pawn(active_player.opposite()))) {
-            Err(InvalidFENString::NoPawnOnEnPassantSquare)
+            Err(InvalidFENString::NoPawnOnEnPassantSquare(idx))
         } else {
             Ok(())
         }
@@ -349,9 +400,10 @@ fn try_parse_piece(color: Color, piece: &str) -> Result<Piece, InvalidFENString<
 }
 
 fn get_valid_en_passant_rank(active_player: Color) -> Rank {
-    match active_player.opposite() {
-        Color::White => Rank::Three,
-        Color::Black => Rank::Five,
+    // Where to capture en-passant.
+    match active_player {
+        Color::White => Rank::Six,
+        Color::Black => Rank::Three,
     }
 }
 
@@ -420,16 +472,16 @@ mod tests {
 
     use crate::{
         fen::{
-            InvalidFENString, try_get_fen_parts, try_parse_active_player, try_parse_board,
-            try_parse_castling_rights, try_parse_en_passant_square, try_parse_half_move_clock,
-            try_parse_move_clock, try_parse_rank,
+            FENBoard, InvalidFENString, try_get_fen_parts, try_parse_active_player,
+            try_parse_board, try_parse_castling_rights, try_parse_en_passant_square,
+            try_parse_half_move_clock, try_parse_move_clock, try_parse_rank,
         },
         game::CastlingRights,
         movgen::{
             bitboard::Rank,
             piece::{
-                Color::{self, Black, White},
-                Piece::{self, Bishop, King, Knight, Pawn, Queen, Rook},
+                Color::{Black, White},
+                Piece::{Bishop, King, Knight, Queen, Rook},
             },
         },
         square::SQUARES,
@@ -474,8 +526,8 @@ mod tests {
 
     #[test]
     fn test_try_parse_to_play() {
-        assert_eq!(try_parse_active_player("w"), Ok(Color::White));
-        assert_eq!(try_parse_active_player("b"), Ok(Color::Black));
+        assert_eq!(try_parse_active_player("w"), Ok(White));
+        assert_eq!(try_parse_active_player("b"), Ok(Black));
         assert_eq!(
             try_parse_active_player("W"),
             Err(InvalidFENString::Color("W"))
@@ -514,26 +566,26 @@ mod tests {
     fn test_try_parse_en_passant_square() {
         // The square the active player can capture on.
         assert_eq!(
-            try_parse_en_passant_square(Color::White, "e5"),
+            try_parse_en_passant_square(White, "e5"),
             Ok(Some(SQUARES[28]))
         );
         assert_eq!(
-            try_parse_en_passant_square(Color::Black, "e3"),
+            try_parse_en_passant_square(Black, "e3"),
             Ok(Some(SQUARES[44]))
         );
-        assert_eq!(try_parse_en_passant_square(Color::Black, "-"), Ok(None));
+        assert_eq!(try_parse_en_passant_square(Black, "-"), Ok(None));
         // White can never have a pawn that can be captured en passant on the 4th rank.
         assert_eq!(
-            try_parse_en_passant_square(Color::Black, "e4"),
+            try_parse_en_passant_square(Black, "e4"),
             Err(InvalidFENString::EnPassantRank(Rank::Four))
         );
         // Black can never have a pawn that can be captured en passant on the 4th rank.
         assert_eq!(
-            try_parse_en_passant_square(Color::Black, "e4"),
+            try_parse_en_passant_square(Black, "e4"),
             Err(InvalidFENString::EnPassantRank(Rank::Four))
         );
         assert_eq!(
-            try_parse_en_passant_square(Color::Black, "tic-tac-toe"),
+            try_parse_en_passant_square(Black, "tic-tac-toe"),
             Err(InvalidFENString::Square("tic-tac-toe"))
         );
     }
@@ -614,40 +666,40 @@ mod tests {
         assert_eq!(
             try_parse_rank("RNBQKBNR"),
             Ok([
-                Some(Piece::Rook(Color::White)),
-                Some(Piece::Knight(Color::White)),
-                Some(Piece::Bishop(Color::White)),
-                Some(Piece::Queen(Color::White)),
-                Some(Piece::King(Color::White)),
-                Some(Piece::Bishop(Color::White)),
-                Some(Piece::Knight(Color::White)),
-                Some(Piece::Rook(Color::White)),
+                Some(Rook(White)),
+                Some(Knight(White)),
+                Some(Bishop(White)),
+                Some(Queen(White)),
+                Some(King(White)),
+                Some(Bishop(White)),
+                Some(Knight(White)),
+                Some(Rook(White)),
             ])
         );
         assert_eq!(
             try_parse_rank("rnbqkbnr"),
             Ok([
-                Some(Piece::Rook(Color::Black)),
-                Some(Piece::Knight(Color::Black)),
-                Some(Piece::Bishop(Color::Black)),
-                Some(Piece::Queen(Color::Black)),
-                Some(Piece::King(Color::Black)),
-                Some(Piece::Bishop(Color::Black)),
-                Some(Piece::Knight(Color::Black)),
-                Some(Piece::Rook(Color::Black)),
+                Some(Rook(Black)),
+                Some(Knight(Black)),
+                Some(Bishop(Black)),
+                Some(Queen(Black)),
+                Some(King(Black)),
+                Some(Bishop(Black)),
+                Some(Knight(Black)),
+                Some(Rook(Black)),
             ])
         );
         assert_eq!(
             try_parse_rank("r6r"),
             Ok([
-                Some(Piece::Rook(Color::Black)),
+                Some(Rook(Black)),
                 None,
                 None,
                 None,
                 None,
                 None,
                 None,
-                Some(Piece::Rook(Color::Black)),
+                Some(Rook(Black)),
             ])
         );
         assert_eq!(
@@ -656,16 +708,7 @@ mod tests {
         );
         assert_eq!(
             try_parse_rank("7Q"),
-            Ok([
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                Some(Piece::Queen(Color::White)),
-            ])
+            Ok([None, None, None, None, None, None, None, Some(Queen(White)),])
         );
 
         assert_eq!(
@@ -696,200 +739,40 @@ mod tests {
         );
     }
 
-    fn wk() -> Option<Piece> {
-        Some(King(White))
-    }
-    fn wq() -> Option<Piece> {
-        Some(Queen(White))
-    }
-    fn wr() -> Option<Piece> {
-        Some(Rook(White))
-    }
-    fn wb() -> Option<Piece> {
-        Some(Bishop(White))
-    }
-    fn wn() -> Option<Piece> {
-        Some(Knight(White))
-    }
-    fn wp() -> Option<Piece> {
-        Some(Pawn(White))
-    }
-
-    fn bk() -> Option<Piece> {
-        Some(King(Black))
-    }
-    fn bq() -> Option<Piece> {
-        Some(Queen(Black))
-    }
-    fn br() -> Option<Piece> {
-        Some(Rook(Black))
-    }
-    fn bb() -> Option<Piece> {
-        Some(Bishop(Black))
-    }
-    fn bn() -> Option<Piece> {
-        Some(Knight(Black))
-    }
-    fn bp() -> Option<Piece> {
-        Some(Pawn(Black))
+    fn helper<'a>(board: [[char; 8]; 8]) -> Result<FENBoard, InvalidFENString<'a>> {
+        Ok(FENBoard::try_from(board).unwrap())
     }
 
     #[test]
-    fn test_try_parse_board() {
-        // Starting position
+    fn test_try_parse_board_starting_position() {
         assert_eq!(
             try_parse_board("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR", None, White),
-            Ok([
-                // Rank 8
-                br(),
-                bn(),
-                bb(),
-                bq(),
-                bk(),
-                bb(),
-                bn(),
-                br(),
-                // Rank 7
-                bp(),
-                bp(),
-                bp(),
-                bp(),
-                bp(),
-                bp(),
-                bp(),
-                bp(),
-                // Rank 6
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                // Rank 5
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                // Rank 4
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                // Rank 3
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                // Rank 2
-                wp(),
-                wp(),
-                wp(),
-                wp(),
-                wp(),
-                wp(),
-                wp(),
-                wp(),
-                // Rank 1
-                wr(),
-                wn(),
-                wb(),
-                wq(),
-                wk(),
-                wb(),
-                wn(),
-                wr(),
+            helper([
+                ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r'],
+                ['p', 'p', 'p', 'p', 'p', 'p', 'p', 'p'],
+                [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
+                [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
+                [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
+                [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
+                ['P', 'P', 'P', 'P', 'P', 'P', 'P', 'P'],
+                ['R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R'],
             ])
         );
-        // Evergreen game
+    }
+
+    #[test]
+    fn test_try_parse_board_evergreen_game() {
         assert_eq!(
             try_parse_board("1r3kr1/pbpBBp1p/1b3P2/8/8/2P2q2/P4PPP/3R2K1", None, Black),
-            Ok([
-                // Rank 8
-                None,
-                br(),
-                None,
-                None,
-                None,
-                bk(),
-                br(),
-                None,
-                // Rank 7
-                bp(),
-                bb(),
-                bp(),
-                wb(),
-                wb(),
-                bp(),
-                None,
-                bp(),
-                // Rank 6
-                None,
-                bb(),
-                None,
-                None,
-                None,
-                wp(),
-                None,
-                None,
-                // Rank 5
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                // Rank 4
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                // Rank 3
-                None,
-                None,
-                wp(),
-                None,
-                None,
-                bq(),
-                None,
-                None,
-                // Rank 2
-                wp(),
-                None,
-                None,
-                None,
-                None,
-                wp(),
-                wp(),
-                wp(),
-                // Rank 1
-                None,
-                None,
-                None,
-                wr(),
-                None,
-                None,
-                wk(),
-                None
+            helper([
+                [' ', 'r', ' ', ' ', ' ', 'k', 'r', ' '],
+                ['p', 'b', 'p', 'B', 'B', 'p', ' ', 'p'],
+                [' ', 'b', ' ', ' ', ' ', 'P', ' ', ' '],
+                [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
+                [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
+                [' ', ' ', 'P', ' ', ' ', 'q', ' ', ' '],
+                ['P', ' ', ' ', ' ', ' ', 'P', 'P', 'P'],
+                [' ', ' ', ' ', 'R', ' ', ' ', 'K', ' '],
             ])
         );
     }

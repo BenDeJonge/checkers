@@ -96,7 +96,6 @@ impl From<&FENBoard> for PieceStates {
         for (i, piece) in value.iter().enumerate() {
             if let Some(p) = piece {
                 let square = BitBoard::from(SQUARES[i].board);
-                dbg!(i, square, &piece);
                 match p {
                     King(White) => state.white.king |= square,
                     Queen(White) => state.white.queen |= square,
@@ -114,7 +113,6 @@ impl From<&FENBoard> for PieceStates {
                 };
             }
         }
-        dbg!(&state);
         state
     }
 }
@@ -446,8 +444,9 @@ mod tests_from_fen {
     use std::num::NonZero;
 
     use crate::{
-        game::{CastlingRights, GameState, PieceState, PlayerState},
-        movgen::{bitboard::bitboard_from_squares, piece::Color::Black},
+        fen::FENBoard,
+        game::{CastlingRights, GameState, PieceStates, PlayerState},
+        movgen::piece::Color::{Black, White},
         square::get_square_from_name,
     };
     use pretty_assertions::assert_eq;
@@ -463,24 +462,27 @@ mod tests_from_fen {
     fn test_1e4() {
         let state =
             GameState::try_from("rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1");
-        let white_pieces = PieceState {
-            king: bitboard_from_squares(["e1"]),
-            queen: bitboard_from_squares(["d1"]),
-            rook: bitboard_from_squares(["a1", "h1"]),
-            bishop: bitboard_from_squares(["c1", "f1"]),
-            knight: bitboard_from_squares(["b1", "g1"]),
-            pawn: bitboard_from_squares(["a2", "b2", "c2", "d2", "e4", "f2", "g2", "h2"]),
-        };
-        let black_pieces = PieceState::starting_position(Black);
+        let fen_board = FENBoard::try_from([
+            ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r'],
+            ['p', 'p', 'p', 'p', 'p', 'p', 'p', 'p'],
+            [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
+            [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
+            [' ', ' ', ' ', ' ', 'P', ' ', ' ', ' '],
+            [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
+            ['P', 'P', 'P', 'P', ' ', 'P', 'P', 'P'],
+            ['R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R'],
+        ])
+        .unwrap();
+        let piece_states = PieceStates::from(&fen_board);
         let expected = GameState::new(
             Black,
-            PlayerState::new(CastlingRights::new(true, true), None, white_pieces),
+            PlayerState::new(CastlingRights::new(true, true), None, piece_states.white),
             PlayerState::new(
                 CastlingRights::new(true, true),
                 get_square_from_name("e3"),
-                black_pieces,
+                piece_states.black,
             ),
-            1,
+            0,
             NonZero::new(1).unwrap(),
         );
 
@@ -490,15 +492,29 @@ mod tests_from_fen {
     #[test]
     fn test_1e4c5() {
         let state =
-            GameState::try_from("rnbqkbnr/pp1ppppp/8/2p5/4P3/8/PPPP1PPP/RNBQKBNR w KQkq c6 0 2");
-        let mut expected = GameState::default();
-        expected.white.make_move(
-            &get_square_from_name("e2").unwrap(),
-            &get_square_from_name("e4").unwrap(),
-        );
-        expected.black.make_move(
-            &get_square_from_name("c7").unwrap(),
-            &get_square_from_name("c5").unwrap(),
+            GameState::try_from("rnbqkbnr/pp1ppppp/8/2p5/4P3/8/PPPP1PPP/RNBQKBNR w KQkq c6 0 1");
+        let fen_board = FENBoard::try_from([
+            ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r'],
+            ['p', 'p', ' ', 'p', 'p', 'p', 'p', 'p'],
+            [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
+            [' ', ' ', 'p', ' ', ' ', ' ', ' ', ' '],
+            [' ', ' ', ' ', ' ', 'P', ' ', ' ', ' '],
+            [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
+            ['P', 'P', 'P', 'P', ' ', 'P', 'P', 'P'],
+            ['R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R'],
+        ])
+        .unwrap();
+        let piece_states = PieceStates::from(&fen_board);
+        let expected = GameState::new(
+            White,
+            PlayerState::new(
+                CastlingRights::new(true, true),
+                get_square_from_name("c6"),
+                piece_states.white,
+            ),
+            PlayerState::new(CastlingRights::new(true, true), None, piece_states.black),
+            0,
+            NonZero::new(1).unwrap(),
         );
         assert_eq!(state, Ok(expected));
     }
@@ -507,14 +523,24 @@ mod tests_from_fen {
     fn test_1e4c5_2nf3() {
         let state =
             GameState::try_from("rnbqkbnr/pp1ppppp/8/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2");
-        let mut expected = GameState::default();
-        expected.white.make_move(
-            &get_square_from_name("e2").unwrap(),
-            &get_square_from_name("e4").unwrap(),
-        );
-        expected.black.make_move(
-            &get_square_from_name("c7").unwrap(),
-            &get_square_from_name("c5").unwrap(),
+        let fen_board = FENBoard::try_from([
+            ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r'],
+            ['p', 'p', ' ', 'p', 'p', 'p', 'p', 'p'],
+            [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
+            [' ', ' ', 'p', ' ', ' ', ' ', ' ', ' '],
+            [' ', ' ', ' ', ' ', 'P', ' ', ' ', ' '],
+            [' ', ' ', ' ', ' ', ' ', 'N', ' ', ' '],
+            ['P', 'P', 'P', 'P', ' ', 'P', 'P', 'P'],
+            ['R', 'N', 'B', 'Q', 'K', 'B', ' ', 'R'],
+        ])
+        .unwrap();
+        let piece_states = PieceStates::from(&fen_board);
+        let expected = GameState::new(
+            Black,
+            PlayerState::new(CastlingRights::new(true, true), None, piece_states.white),
+            PlayerState::new(CastlingRights::new(true, true), None, piece_states.black),
+            1,
+            NonZero::new(2).unwrap(),
         );
         assert_eq!(state, Ok(expected));
     }
