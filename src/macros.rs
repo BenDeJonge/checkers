@@ -31,6 +31,43 @@ macro_rules! impl_enum_index_math {
     };
 }
 
+#[doc(hidden)]
+pub const fn __compare_str_as_bytes(a: &str, b: &str) -> bool {
+    if a.len() != b.len() {
+        return false;
+    }
+
+    let bytes_a = a.as_bytes();
+    let bytes_b = b.as_bytes();
+
+    let mut i = 0;
+    while i < bytes_a.len() {
+        if bytes_a[i] != bytes_b[i] {
+            return false;
+        }
+        i += 1;
+    }
+
+    true
+}
+
+/// Create a `const fn` that matches `&str` to a `usize` index.
+#[macro_export]
+macro_rules! make_str_lut {
+    ($fn_name:ident, {
+        $($name:literal => $idx:expr),* $(,)?
+    }) => {
+        pub const fn $fn_name(s: &str) -> Option<usize> {
+            $(
+                if $crate::macros::__compare_str_as_bytes(s, $name) {
+                    return Some($idx);
+                }
+            )*
+            None
+        }
+    };
+}
+
 #[cfg(test)]
 mod tests {
     use crate::square::OutOfBounds;
@@ -62,5 +99,21 @@ mod tests {
         assert_eq!(Test::Two.saturating_sub(1), Test::One);
         assert_eq!(Test::Two.saturating_sub(2), Test::Zero);
         assert_eq!(Test::Two.saturating_sub(3), Test::Zero);
+    }
+
+    make_str_lut!(string_lut, {
+        "zero" => 0,
+        "one" => 1,
+        "two" => 2,
+    });
+
+    #[test]
+    fn test_string_lut() {
+        assert_eq!(string_lut("zero"), Some(0));
+        assert_eq!(string_lut("one"), Some(1));
+        assert_eq!(string_lut("two"), Some(2));
+        assert_eq!(string_lut("three"), None);
+        assert_eq!(string_lut("Zero"), None);
+        assert_eq!(string_lut("ZERO"), None);
     }
 }
