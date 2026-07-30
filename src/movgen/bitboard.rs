@@ -1288,16 +1288,29 @@ mod tests_enum_math {
 
 #[cfg(test)]
 mod tests_bitboard_from_squares {
-    use crate::movgen::bitboard::bitboard_from_squares;
-
-    #[test]
-    fn test_empty_squares() {
-        todo!()
-    }
+    use crate::{
+        movgen::bitboard::{BitBoard, bitboard_from_squares},
+        square::get_square_from_name,
+    };
 
     #[test]
     fn test_valid_squares() {
-        todo!()
+        assert_eq!(
+            BitBoard::from(get_square_from_name("e4").unwrap().board),
+            bitboard_from_squares(["e4"])
+        );
+        assert_eq!(
+            BitBoard::from(
+                get_square_from_name("e4").unwrap().board
+                    | get_square_from_name("e5").unwrap().board
+            ),
+            bitboard_from_squares(["e4", "e5"])
+        );
+    }
+
+    #[test]
+    fn test_empty_squares() {
+        assert_eq!(BitBoard::empty(), bitboard_from_squares([]));
     }
 
     #[test]

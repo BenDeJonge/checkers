@@ -399,8 +399,8 @@ fn try_parse_piece(color: Color, piece: &str) -> Result<Piece, InvalidFENString<
     }
 }
 
+/// Get the rank of the square the active player can capture on.
 fn get_valid_en_passant_rank(active_player: Color) -> Rank {
-    // Where to capture en-passant.
     match active_player {
         Color::White => Rank::Six,
         Color::Black => Rank::Three,
@@ -484,7 +484,7 @@ mod tests {
                 Piece::{Bishop, King, Knight, Queen, Rook},
             },
         },
-        square::SQUARES,
+        square::get_square_from_name,
     };
 
     #[test]
@@ -564,14 +564,13 @@ mod tests {
 
     #[test]
     fn test_try_parse_en_passant_square() {
-        // The square the active player can capture on.
         assert_eq!(
-            try_parse_en_passant_square(White, "e5"),
-            Ok(Some(SQUARES[28]))
+            try_parse_en_passant_square(White, "e6"),
+            Ok(get_square_from_name("e6"))
         );
         assert_eq!(
             try_parse_en_passant_square(Black, "e3"),
-            Ok(Some(SQUARES[44]))
+            Ok(get_square_from_name("e3"))
         );
         assert_eq!(try_parse_en_passant_square(Black, "-"), Ok(None));
         // White can never have a pawn that can be captured en passant on the 4th rank.

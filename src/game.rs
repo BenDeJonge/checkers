@@ -547,11 +547,51 @@ mod tests_from_fen {
 
     #[test]
     fn test_evergreen_game() {
-        todo!("1r3kr1/pbpBBp1p/1b3P2/8/8/2P2q2/P4PPP/3R2K1 b - - 0 24")
+        let state = GameState::try_from("1r3kr1/pbpBBp1p/1b3P2/8/8/2P2q2/P4PPP/3R2K1 b - - 0 24");
+        let fen_board = FENBoard::try_from([
+            [' ', 'r', ' ', ' ', ' ', 'k', 'r', ' '],
+            ['p', 'b', 'p', 'B', 'B', 'p', ' ', 'p'],
+            [' ', 'b', ' ', ' ', ' ', 'P', ' ', ' '],
+            [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
+            [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
+            [' ', ' ', 'P', ' ', ' ', 'q', ' ', ' '],
+            ['P', ' ', ' ', ' ', ' ', 'P', 'P', 'P'],
+            [' ', ' ', ' ', 'R', ' ', ' ', 'K', ' '],
+        ])
+        .unwrap();
+        let piece_states = PieceStates::from(&fen_board);
+        let expected = GameState::new(
+            Black,
+            PlayerState::new(CastlingRights::new(false, false), None, piece_states.white),
+            PlayerState::new(CastlingRights::new(false, false), None, piece_states.black),
+            0,
+            NonZero::new(24).unwrap(),
+        );
+        assert_eq!(state, Ok(expected));
     }
 
     #[test]
     fn test_stalemate() {
-        todo!("8/8/8/8/8/7K/5Q2/7k b - - 0 45")
+        let state = GameState::try_from("8/8/8/8/8/7K/5Q2/7k b - - 0 45");
+        let fen_board = FENBoard::try_from([
+            [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
+            [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
+            [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
+            [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
+            [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
+            [' ', ' ', ' ', ' ', ' ', ' ', ' ', 'K'],
+            [' ', ' ', ' ', ' ', ' ', 'Q', ' ', ' '],
+            [' ', ' ', ' ', ' ', ' ', ' ', ' ', 'k'],
+        ])
+        .unwrap();
+        let piece_states = PieceStates::from(&fen_board);
+        let expected = GameState::new(
+            Black,
+            PlayerState::new(CastlingRights::new(false, false), None, piece_states.white),
+            PlayerState::new(CastlingRights::new(false, false), None, piece_states.black),
+            0,
+            NonZero::new(45).unwrap(),
+        );
+        assert_eq!(state, Ok(expected));
     }
 }
