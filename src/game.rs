@@ -236,7 +236,7 @@ impl<'a> TryFrom<&'a str> for GameState {
     /// # use checkers::fen::InvalidFENString;
     /// // The first row (8th rank) has 9 characters.
     /// let state = GameState::try_from("rrnbqkbnr/8/8/8/8/8/8/RNBQKBNR w KQkq - 0 1");
-    /// assert_eq!(state, Err(InvalidFENString::InvalidRankLength(9)));
+    /// assert_eq!(state, Err(InvalidFENString::RankIndex(9)));
     /// ```
     fn try_from(value: &'a str) -> Result<Self, Self::Error> {
         let fen_parts = try_get_fen_parts(value)?;
