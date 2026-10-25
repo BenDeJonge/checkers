@@ -18,9 +18,9 @@ use crate::{
 /// A lookup table of bitboards for each square on the chess board.
 /// This can be used to e.g. store the available pseudo-legal moves a piece has from every square.
 /// A move is pseudo-legal if it assumes an otherwise empty board.
-type BitBoardLUT = [BitBoard; 64];
+pub type BitBoardLUT = [BitBoard; 64];
 
-struct MoveLUT(BitBoardLUT);
+pub struct MoveLUT(BitBoardLUT);
 
 impl MoveLUT {
     /// Get the available pseudo-legal moves from a given start square.
@@ -169,7 +169,7 @@ fn generate_pawn_black_lut() -> BitBoardLUT {
     )
 }
 
-struct PieceLUT {
+pub struct PieceLUT {
     bishop: MoveLUT,
     knight: MoveLUT,
     rook: MoveLUT,
@@ -217,6 +217,12 @@ mod tests {
         square::get_square_from_name,
     };
     use pretty_assertions::assert_eq;
+
+    fn helper(lut: BitBoardLUT, name: &str, squares: &str) {
+        let square = get_square_from_name(name).unwrap();
+        let actual = format!("{}", lut[square.idx]);
+        assert_eq!(actual, squares, "{} {:?}", name, square);
+    }
 
     #[test]
     fn test_bishop_lut() {
@@ -923,11 +929,5 @@ mod tests {
                       ........\n\
                       ........\n",
         );
-    }
-
-    fn helper(lut: BitBoardLUT, name: &str, squares: &str) {
-        let square = get_square_from_name(name).unwrap();
-        let actual = format!("{}", lut[square.idx]);
-        assert_eq!(actual, squares, "{} {:?}", name, square);
     }
 }
