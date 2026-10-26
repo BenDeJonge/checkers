@@ -1,18 +1,38 @@
 use crate::{
     movgen::{
         bitboard::{BitBoard, File, Rank},
-        move_lut::{BitBoardLUT, MoveLUT, PieceLUT},
+        move_lut::{BitBoardLUT, MovementLUT, PieceLUT, SquareLUT},
+        piece::{
+            Color::{Black, White},
+            Piece,
+        },
     },
-    square::SQUARES,
+    square::{SQUARES, Square},
 };
 
 struct CaptureLUT<'a> {
-    move_lut: &'a PieceLUT,
-    pawn_white_lut: MoveLUT,
-    pawn_black_lut: MoveLUT,
-    rook: MoveLUT,
-    bishop: MoveLUT,
-    queen: MoveLUT,
+    move_lut: &'a MovementLUT,
+    pawn_white: PieceLUT,
+    pawn_black: PieceLUT,
+    rook: PieceLUT,
+    bishop: PieceLUT,
+    queen: PieceLUT,
+}
+
+impl<'a> SquareLUT for CaptureLUT<'a> {
+    fn get(&self, piece: &Piece, square: &Square) -> &BitBoard {
+        match piece {
+            // Movement is identical to capture
+            &Piece::King(_) | &Piece::Knight(_) => self.move_lut.get(piece, square),
+            // Pawns capture diagonall
+            &Piece::Pawn(White) => self.pawn_white.get(square),
+            &Piece::Pawn(Black) => self.pawn_black.get(square),
+            // Sliding pieces need "ray tracing"
+            &Piece::Queen(_) => self.queen.get(square),
+            &Piece::Rook(_) => self.rook.get(square),
+            &Piece::Bishop(_) => self.bishop.get(square),
+        }
+    }
 }
 
 fn generate_pawn_captures(

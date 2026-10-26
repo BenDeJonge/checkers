@@ -20,9 +20,9 @@ use crate::{
 /// A move is pseudo-legal if it assumes an otherwise empty board.
 pub type BitBoardLUT = [BitBoard; 64];
 
-pub struct MoveLUT(BitBoardLUT);
+pub struct PieceLUT(BitBoardLUT);
 
-impl MoveLUT {
+impl PieceLUT {
     /// Get the available pseudo-legal moves from a given start square.
     pub fn get(&self, square: &Square) -> &BitBoard {
         self.0.get(square.idx).expect("idx in [0, 63]")
@@ -169,30 +169,36 @@ fn generate_pawn_black_lut() -> BitBoardLUT {
     )
 }
 
-pub struct PieceLUT {
-    bishop: MoveLUT,
-    knight: MoveLUT,
-    rook: MoveLUT,
-    queen: MoveLUT,
-    king: MoveLUT,
-    pawn_white: MoveLUT,
-    pawn_black: MoveLUT,
+pub trait SquareLUT {
+    fn get(&self, piece: &Piece, square: &Square) -> &BitBoard;
 }
 
-impl PieceLUT {
+pub struct MovementLUT {
+    bishop: PieceLUT,
+    knight: PieceLUT,
+    rook: PieceLUT,
+    queen: PieceLUT,
+    king: PieceLUT,
+    pawn_white: PieceLUT,
+    pawn_black: PieceLUT,
+}
+
+impl MovementLUT {
     pub fn new() -> Self {
         Self {
-            bishop: MoveLUT(generate_bishop_lut()),
-            knight: MoveLUT(generate_king_lut()),
-            rook: MoveLUT(generate_rook_lut()),
-            queen: MoveLUT(generate_queen_lut()),
-            king: MoveLUT(generate_king_lut()),
-            pawn_white: MoveLUT(generate_pawn_white_lut()),
-            pawn_black: MoveLUT(generate_pawn_black_lut()),
+            bishop: PieceLUT(generate_bishop_lut()),
+            knight: PieceLUT(generate_king_lut()),
+            rook: PieceLUT(generate_rook_lut()),
+            queen: PieceLUT(generate_queen_lut()),
+            king: PieceLUT(generate_king_lut()),
+            pawn_white: PieceLUT(generate_pawn_white_lut()),
+            pawn_black: PieceLUT(generate_pawn_black_lut()),
         }
     }
+}
 
-    pub fn get(&self, piece: &Piece, square: &Square) -> &BitBoard {
+impl SquareLUT for MovementLUT {
+    fn get(&self, piece: &Piece, square: &Square) -> &BitBoard {
         match *piece {
             Piece::Bishop(_) => self.bishop.get(square),
             Piece::Knight(_) => self.knight.get(square),
